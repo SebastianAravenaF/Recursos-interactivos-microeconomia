@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curvas de indiferencia — recurso interactivo</title>
+<style>
+  :root{
+    --bg:#f7f8fb; --card:#ffffff; --ink:#14213d; --muted:#667085;
+    --line:#d8dee9; --accent:#2563eb; --soft:#eaf1ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1100px;margin:28px auto;padding:0 18px}
+  .head{margin-bottom:16px}
+  h1{margin:0 0 6px;font-size:30px}
+  .sub{color:var(--muted);font-size:16px}
+  .card{background:var(--card);border:1px solid #e4e7ec;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(20,33,61,.06)}
+  .toolbar{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px}
+  button{
+    border:1px solid #cfd6e4;background:white;color:var(--ink);border-radius:10px;
+    padding:10px 14px;font-weight:650;cursor:pointer;font-size:14px
+  }
+  button.active{background:var(--accent);color:white;border-color:var(--accent)}
+  button:hover{filter:brightness(.98)}
+  .row{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:18px;align-items:start}
+  canvas{width:100%;height:auto;border:1px solid #e5e7eb;border-radius:14px;background:white}
+  .panel{border:1px solid #e4e7ec;border-radius:14px;padding:14px;background:#fbfcff}
+  .panel h3{margin:0 0 10px;font-size:16px}
+  .panel p{margin:0 0 12px;color:var(--muted);font-size:14px;line-height:1.4}
+  label{display:block;font-size:13px;font-weight:650;margin:10px 0 6px}
+  input[type=range]{width:100%}
+  .value{font-variant-numeric:tabular-nums;font-weight:700}
+  .note{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--soft);font-size:15px;line-height:1.45}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:13px;color:var(--muted)}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+  @media(max-width:800px){.row{grid-template-columns:1fr}.panel{order:-1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h1>Curvas de indiferencia</h1>
+    <div class="sub">Recurso interactivo para introducir preferencias del consumidor.</div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <button id="b1" class="active">1. Mostrar canastas</button>
+      <button id="b2">2. Mostrar curvas</button>
+      <button id="b3">3. Comparar utilidad</button>
+      <button id="reset">Reiniciar</button>
+    </div>
+
+    <div class="row">
+      <div>
+        <canvas id="cv" width="800" height="600"></canvas>
+        <div class="legend">
+          <span><span class="dot" style="background:#2563eb"></span>Canastas</span>
+          <span><span class="dot" style="background:#f59e0b"></span>U₁</span>
+          <span><span class="dot" style="background:#16a34a"></span>U₂</span>
+          <span><span class="dot" style="background:#7c3aed"></span>U₃</span>
+        </div>
+        <div id="note" class="note">
+          Distintas canastas combinan cantidades diferentes de los bienes X e Y.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Explora</h3>
+        <p>En el paso 3 puedes mover el nivel de utilidad y observar cómo cambia la curva.</p>
+        <label for="u">Nivel de utilidad: <span id="uval" class="value">16</span></label>
+        <input id="u" type="range" min="5" max="32" step="1" value="16">
+        <label for="alpha">Preferencia por X (α): <span id="aval" class="value">0,50</span></label>
+        <input id="alpha" type="range" min="0.20" max="0.80" step="0.05" value="0.50">
+        <p style="margin-top:12px">Se usa una utilidad Cobb–Douglas:<br><strong>U = X<sup>α</sup>Y<sup>1−α</sup></strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const note = document.getElementById('note');
+const sliderU = document.getElementById('u');
+const sliderA = document.getElementById('alpha');
+const uval = document.getElementById('uval');
+const aval = document.getElementById('aval');
+
+let step = 1;
+const pad = {l:72,r:28,t:30,b:68};
+const xmax=10, ymax=10;
+const bundles = [
+  {x:2,y:8,n:'A'}, {x:4,y:4,n:'B'}, {x:8,y:2,n:'C'}, {x:3,y:3,n:'D'}
+];
+
+function sx(x){return pad.l + x/xmax*(cv.width-pad.l-pad.r)}
+function sy(y){return cv.height-pad.b - y/ymax*(cv.height-pad.t-pad.b)}
+
+function axes(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1;
+  ctx.font='13px system-ui';ctx.fillStyle='#667085';
+  for(let i=0;i<=10;i+=2){
+    ctx.beginPath();ctx.moveTo(sx(i),sy(0));ctx.lineTo(sx(i),sy(10));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(sx(0),sy(i));ctx.lineTo(sx(10),sy(i));ctx.stroke();
+    ctx.fillText(i, sx(i)-4, sy(0)+24);
+    if(i>0)ctx.fillText(i, sx(0)-28, sy(i)+4);
+  }
+  ctx.strokeStyle='#111827';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(10.25),sy(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(0),sy(10.25));ctx.stroke();
+  ctx.fillStyle='#14213d';ctx.font='bold 15px system-ui';
+  ctx.fillText('Bien X', sx(5)-22, cv.height-20);
+  ctx.save();ctx.translate(20,sy(5)+25);ctx.rotate(-Math.PI/2);ctx.fillText('Bien Y',0,0);ctx.restore();
+}
+function drawBundles(){
+  bundles.forEach(p=>{
+    ctx.beginPath();ctx.fillStyle='#2563eb';ctx.arc(sx(p.x),sy(p.y),7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#14213d';ctx.font='bold 15px system-ui';ctx.fillText(p.n,sx(p.x)+10,sy(p.y)-8);
+  });
+}
+function curve(U,a,color,label){
+  ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();
+  let started=false;
+  for(let x=.15;x<=10;x+=.03){
+    // U = x^a y^(1-a) -> y = (U / x^a)^(1/(1-a))
+    let y=Math.pow(U/Math.pow(x,a),1/(1-a));
+    if(y>=0 && y<=10){
+      if(!started){ctx.moveTo(sx(x),sy(y));started=true}else ctx.lineTo(sx(x),sy(y));
+    }
+  }
+  ctx.stroke();
+  // label near right side
+  for(let x=9.3;x>=1;x-=.1){
+    let y=Math.pow(U/Math.pow(x,a),1/(1-a));
+    if(y>0.6 && y<9.4){
+      ctx.fillStyle=color;ctx.font='bold 14px system-ui';ctx.fillText(label,sx(x)+6,sy(y));break;
+    }
+  }
+}
+function render(){
+  axes();
+  const a=parseFloat(sliderA.value);
+  const U=parseFloat(sliderU.value);
+  if(step===1){
+    drawBundles();
+    note.innerHTML='<strong>Paso 1.</strong> Cada punto representa una canasta distinta de los bienes X e Y.';
+  } else if(step===2){
+    drawBundles();
+    curve(2.8,a,'#f59e0b','U₁');
+    curve(4.0,a,'#16a34a','U₂');
+    curve(5.2,a,'#7c3aed','U₃');
+    note.innerHTML='<strong>Paso 2.</strong> Una curva de indiferencia reúne canastas que entregan el <strong>mismo nivel de utilidad</strong>. Las curvas no se cruzan.';
+  } else {
+    curve(Math.sqrt(U),a,'#2563eb','U');
+    note.innerHTML='<strong>Paso 3.</strong> Mueve el control de utilidad. Una curva ubicada <strong>más arriba y a la derecha</strong> representa un nivel de utilidad mayor.';
+  }
+}
+function setStep(s){
+  step=s;
+  ['b1','b2','b3'].forEach((id,i)=>document.getElementById(id).classList.toggle('active',i+1===s));
+  sliderU.disabled=s!==3;
+  render();
+}
+document.getElementById('b1').onclick=()=>setStep(1);
+document.getElementById('b2').onclick=()=>setStep(2);
+document.getElementById('b3').onclick=()=>setStep(3);
+document.getElementById('reset').onclick=()=>{
+  sliderU.value=16; sliderA.value=.50; uval.textContent='16'; aval.textContent='0,50'; setStep(1);
+};
+sliderU.oninput=()=>{uval.textContent=sliderU.value;render()};
+sliderA.oninput=()=>{aval.textContent=parseFloat(sliderA.value).toFixed(2).replace('.',',');render()};
+sliderU.disabled=true;
+render();
+</script>
+</body>
+</html>
