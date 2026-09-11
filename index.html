@@ -50,6 +50,7 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     <button id="tab1" class="active">Curvas de indiferencia</button>
     <button id="tab2">Sustitutos y complementarios perfectos</button>
     <button id="tab3">Restricción presupuestaria</button>
+    <button id="tab5">Elasticidad-precio</button>
     <button id="tab4">Demanda: estática comparativa</button>
   </div>
 
@@ -203,21 +204,74 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     </div>
   </section>
 
+
+
+  <!-- MÓDULO 5 -->
+  <section id="mod5" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="elCase0" class="active">ε = 0</button>
+        <button id="elCase05">0 &lt; |ε| &lt; 1</button>
+        <button id="elCase1">|ε| = 1</button>
+        <button id="elCase2">|ε| &gt; 1</button>
+        <button id="elCaseInf">|ε| = ∞</button>
+        <button id="reset5">Reiniciar</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <canvas id="cv5" width="800" height="600"></canvas>
+          <div class="legend">
+            <span><span class="dot" style="background:#2563eb"></span>Demanda</span>
+            <span><span class="dot" style="background:#f59e0b"></span>Punto inicial</span>
+            <span><span class="dot" style="background:#16a34a"></span>Punto final</span>
+          </div>
+          <div id="note5" class="note"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Elasticidad-precio de la demanda</h3>
+          <p>Selecciona uno de los cinco casos y mueve el cambio porcentual del precio.</p>
+
+          <label>Cambio en el precio: <span id="pctPVal" class="value">−20%</span></label>
+          <input id="pctP" type="range" min="-40" max="40" step="5" value="-20">
+
+          <div class="kpis">
+            <div class="kpi"><span>%ΔP</span><b id="pctPOut">−20%</b></div>
+            <div class="kpi"><span>%ΔQ</span><b id="pctQOut">0%</b></div>
+            <div class="kpi"><span>|ε|</span><b id="epsOut">0</b></div>
+            <div class="kpi"><span>Clasificación</span><b id="epsClass">Perfectamente inelástica</b></div>
+          </div>
+
+          <div class="note" style="margin-top:12px">
+            <strong>Regla:</strong><br>
+            |ε| = 0 → perfectamente inelástica<br>
+            0 &lt; |ε| &lt; 1 → inelástica<br>
+            |ε| = 1 → unitaria<br>
+            |ε| &gt; 1 → elástica<br>
+            |ε| = ∞ → perfectamente elástica
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
 
 // tabs
-[1,2,3,4].forEach(n=>$('tab'+n).onclick=()=>switchTab(n));
+[1,2,3,4,5].forEach(n=>$('tab'+n).onclick=()=>switchTab(n));
 function switchTab(n){
-  [1,2,3,4].forEach(i=>{
+  [1,2,3,4,5].forEach(i=>{
     $('tab'+i).classList.toggle('active',i===n);
     $('mod'+i).classList.toggle('active',i===n);
   });
   if(n===2) render2();
   if(n===3) render3();
   if(n===4) render4();
+  if(n===5) render5();
 }
 
 // shared axes
@@ -520,6 +574,208 @@ $('reset4').onclick=()=>{
 priceDemand.oninput=render4;
 demandShift.oninput=render4;
 render4();
+
+
+
+
+// MODULE 5 — CINCO CASOS DE ELASTICIDAD
+const cv5=$('cv5'),ctx5=cv5.getContext('2d'),pctP=$('pctP');
+let elasticityCase='zero';
+
+const elasticityCases = {
+  zero:{
+    label:'Perfectamente inelástica',
+    eps:0,
+    color:'#dc2626',
+    type:'vertical',
+    q0:5,p0:4,
+    desc:'La cantidad demandada no cambia ante variaciones en el precio.'
+  },
+  inelastic:{
+    label:'Inelástica',
+    eps:0.5,
+    color:'#ea580c',
+    type:'line',
+    q0:4,p0:4,
+    desc:'La cantidad demandada cambia en menor proporción que el precio.'
+  },
+  unit:{
+    label:'Unitaria',
+    eps:1,
+    color:'#16a34a',
+    type:'line',
+    q0:4,p0:4,
+    desc:'La cantidad demandada cambia en la misma proporción que el precio.'
+  },
+  elastic:{
+    label:'Elástica',
+    eps:2,
+    color:'#2563eb',
+    type:'line',
+    q0:3,p0:4,
+    desc:'La cantidad demandada cambia en mayor proporción que el precio.'
+  },
+  infinite:{
+    label:'Perfectamente elástica',
+    eps:Infinity,
+    color:'#7c3aed',
+    type:'horizontal',
+    q0:5,p0:4,
+    desc:'La demanda es horizontal: una variación mínima del precio genera una respuesta extrema de la cantidad.'
+  }
+};
+
+function makeElasticityAxes(ctx,cv){
+  const pad={l:72,r:28,t:30,b:68}, xmax=10, ymax=10;
+  const sx=x=>pad.l+x/xmax*(cv.width-pad.l-pad.r);
+  const sy=y=>cv.height-pad.b-y/ymax*(cv.height-pad.t-pad.b);
+
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1;
+  ctx.font='13px system-ui';ctx.fillStyle='#667085';
+
+  for(let i=0;i<=10;i+=2){
+    ctx.beginPath();ctx.moveTo(sx(i),sy(0));ctx.lineTo(sx(i),sy(10));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(sx(0),sy(i));ctx.lineTo(sx(10),sy(i));ctx.stroke();
+    ctx.fillText(i,sx(i)-4,sy(0)+24);
+    if(i>0)ctx.fillText(i,sx(0)-28,sy(i)+4);
+  }
+
+  ctx.strokeStyle='#111827';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(10),sy(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(0),sy(10));ctx.stroke();
+
+  ctx.fillStyle='#14213d';ctx.font='bold 15px system-ui';
+  ctx.fillText('Cantidad Q',sx(5)-34,cv.height-20);
+  ctx.save();ctx.translate(20,sy(5)+24);ctx.rotate(-Math.PI/2);ctx.fillText('Precio P',0,0);ctx.restore();
+  return {sx,sy};
+}
+
+function drawSegment(ax,x1,y1,x2,y2,color,width=4,dashed=false){
+  ctx5.save();
+  ctx5.strokeStyle=color;ctx5.lineWidth=width;ctx5.setLineDash(dashed?[7,6]:[]);
+  ctx5.beginPath();ctx5.moveTo(ax.sx(x1),ax.sy(y1));ctx5.lineTo(ax.sx(x2),ax.sy(y2));ctx5.stroke();
+  ctx5.restore();
+}
+
+function drawPoint(ax,x,y,color,label){
+  ctx5.beginPath();ctx5.fillStyle=color;ctx5.arc(ax.sx(x),ax.sy(y),8,0,Math.PI*2);ctx5.fill();
+  ctx5.fillStyle='#14213d';ctx5.font='bold 14px system-ui';
+  ctx5.fillText(label,ax.sx(x)+10,ax.sy(y)-9);
+}
+
+function signedPct(v){
+  if(Math.abs(v)<0.001) return '0%';
+  return (v>0?'+':'−')+Math.abs(v).toFixed(0)+'%';
+}
+
+function render5(){
+  const ax=makeElasticityAxes(ctx5,cv5);
+  const c=elasticityCases[elasticityCase];
+  const dP=+pctP.value;
+
+  let dQ=0, q1=c.q0, p1=c.p0*(1+dP/100);
+
+  if(c.type==='vertical'){
+    dQ=0;
+    q1=c.q0;
+  } else if(c.type==='horizontal'){
+    // Conceptual display: quantity response treated as extremely large/undefined
+    dQ = dP===0 ? 0 : (dP<0 ? 999 : -999);
+    p1=c.p0;
+  } else {
+    dQ = -c.eps*dP;
+    q1 = c.q0*(1+dQ/100);
+  }
+
+  // draw curve
+  if(c.type==='vertical'){
+    drawSegment(ax,c.q0,0,c.q0,10,c.color,5);
+  }else if(c.type==='horizontal'){
+    drawSegment(ax,0,c.p0,10,c.p0,c.color,5);
+  }else{
+    // Pendiente coherente con la elasticidad en A:
+    // |ε| = |dQ/dP|·P/Q  =>  dP/dQ = -P/(|ε|Q)
+    const visualSlope = -c.p0/(c.eps*c.q0);
+    let x1=0, y1=c.p0 + visualSlope*(0-c.q0);
+    let x2=10, y2=c.p0 + visualSlope*(10-c.q0);
+
+    // clip to box by finding intersections
+    const pts=[];
+    const add=(x,y)=>{if(x>=0&&x<=10&&y>=0&&y<=10)pts.push({x,y});};
+    add(0,y1); add(10,y2);
+    if(visualSlope!==0){
+      let xAt0=c.q0+(0-c.p0)/visualSlope; add(xAt0,0);
+      let xAt10=c.q0+(10-c.p0)/visualSlope; add(xAt10,10);
+    }
+    const uniq=[];
+    pts.forEach(p=>{if(!uniq.some(u=>Math.abs(u.x-p.x)<1e-6&&Math.abs(u.y-p.y)<1e-6))uniq.push(p)});
+    if(uniq.length>=2)drawSegment(ax,uniq[0].x,uniq[0].y,uniq[1].x,uniq[1].y,c.color,5);
+  }
+
+  // initial and final reference points
+  drawPoint(ax,c.q0,c.p0,'#f59e0b','A');
+
+  if(c.type==='horizontal'){
+    if(dP!==0){
+      const qEnd=dP<0?9:1;
+      drawPoint(ax,qEnd,c.p0,'#16a34a','B');
+      ctx5.save();ctx5.setLineDash([5,5]);ctx5.strokeStyle='#16a34a';
+      ctx5.beginPath();ctx5.moveTo(ax.sx(c.q0),ax.sy(c.p0));ctx5.lineTo(ax.sx(qEnd),ax.sy(c.p0));ctx5.stroke();ctx5.restore();
+    }
+  } else {
+    const pDraw=Math.max(0,Math.min(10,p1));
+    const qDraw=Math.max(0,Math.min(10,q1));
+    drawPoint(ax,qDraw,pDraw,'#16a34a','B');
+
+    ctx5.save();ctx5.setLineDash([5,5]);ctx5.strokeStyle='#98a2b3';ctx5.lineWidth=1.5;
+    ctx5.beginPath();ctx5.moveTo(ax.sx(qDraw),ax.sy(0));ctx5.lineTo(ax.sx(qDraw),ax.sy(pDraw));ctx5.lineTo(ax.sx(0),ax.sy(pDraw));ctx5.stroke();
+    ctx5.restore();
+  }
+
+  // outputs
+  $('pctPVal').textContent=signedPct(dP);
+  $('pctPOut').textContent=signedPct(dP);
+
+  if(c.type==='horizontal' && dP!==0){
+    $('pctQOut').textContent='Muy grande';
+    $('epsOut').textContent='∞';
+  }else{
+    $('pctQOut').textContent=signedPct(dQ);
+    $('epsOut').textContent=(c.eps===Infinity?'∞':String(c.eps).replace('.',','));
+  }
+
+  $('epsClass').textContent=c.label;
+
+  let comparison='';
+  if(c.eps===0) comparison='|%ΔQ| < |%ΔP|';
+  else if(c.eps<1) comparison='|%ΔQ| < |%ΔP|';
+  else if(c.eps===1) comparison='|%ΔQ| = |%ΔP|';
+  else if(c.eps===Infinity) comparison='|%ΔQ| ≫ |%ΔP|';
+  else comparison='|%ΔQ| > |%ΔP|';
+
+  $('note5').innerHTML='<strong>'+c.label+'.</strong> '+c.desc+
+    '<br><br><strong>Comparación:</strong> '+comparison+
+    '. Con un cambio de precio de <strong>'+signedPct(dP)+'</strong>, el cambio de cantidad es <strong>'+
+    (c.type==='horizontal'&&dP!==0?'muy grande':signedPct(dQ))+'</strong>.';
+}
+
+function setElasticityCase(key){
+  elasticityCase=key;
+  const map={zero:'elCase0',inelastic:'elCase05',unit:'elCase1',elastic:'elCase2',infinite:'elCaseInf'};
+  Object.entries(map).forEach(([k,id])=>$(id).classList.toggle('active',k===key));
+  render5();
+}
+
+$('elCase0').onclick=()=>setElasticityCase('zero');
+$('elCase05').onclick=()=>setElasticityCase('inelastic');
+$('elCase1').onclick=()=>setElasticityCase('unit');
+$('elCase2').onclick=()=>setElasticityCase('elastic');
+$('elCaseInf').onclick=()=>setElasticityCase('infinite');
+$('reset5').onclick=()=>{pctP.value=-20;setElasticityCase('zero');};
+pctP.oninput=render5;
+render5();
 
 </script>
 </body>
