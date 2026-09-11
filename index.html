@@ -50,6 +50,7 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     <button id="tab1" class="active">Curvas de indiferencia</button>
     <button id="tab2">Sustitutos y complementarios perfectos</button>
     <button id="tab3">Restricción presupuestaria</button>
+    <button id="tab4">Demanda: estática comparativa</button>
   </div>
 
   <!-- MÓDULO 1 -->
@@ -157,20 +158,66 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
       </div>
     </div>
   </section>
+  <!-- MÓDULO 4 -->
+  <section id="mod4" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="dmb1" class="active">1. Movimiento sobre la demanda</button>
+        <button id="dmb2">2. Desplazamientos</button>
+        <button id="reset4">Reiniciar</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <canvas id="cv4" width="800" height="600"></canvas>
+          <div class="legend">
+            <span><span class="dot" style="background:#2563eb"></span>Demanda actual</span>
+            <span><span class="dot" style="background:#98a2b3"></span>Demanda inicial</span>
+            <span><span class="dot" style="background:#f59e0b"></span>Punto observado</span>
+          </div>
+          <div id="note4" class="note"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Controles</h3>
+
+          <label>Precio observado \(P\): <span id="priceVal" class="value">5,0</span></label>
+          <input id="priceDemand" type="range" min="1" max="9" step="0.5" value="5">
+
+          <label>Desplazamiento de la demanda: <span id="shiftVal" class="value">0</span></label>
+          <input id="demandShift" type="range" min="-3" max="3" step="0.5" value="0">
+
+          <div class="kpis">
+            <div class="kpi"><span>Precio</span><b id="demP">5,0</b></div>
+            <div class="kpi"><span>Cantidad demandada</span><b id="demQ">5,3</b></div>
+            <div class="kpi"><span>Intercepto en P</span><b id="demA">9,0</b></div>
+            <div class="kpi"><span>Pendiente</span><b>−0,75</b></div>
+          </div>
+
+          <p style="margin-top:12px">
+            <strong>Demanda inversa:</strong><br>
+            \(P = a - bQ\)
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
 
 // tabs
-[1,2,3].forEach(n=>$('tab'+n).onclick=()=>switchTab(n));
+[1,2,3,4].forEach(n=>$('tab'+n).onclick=()=>switchTab(n));
 function switchTab(n){
-  [1,2,3].forEach(i=>{
+  [1,2,3,4].forEach(i=>{
     $('tab'+i).classList.toggle('active',i===n);
     $('mod'+i).classList.toggle('active',i===n);
   });
   if(n===2) render2();
   if(n===3) render3();
+  if(n===4) render4();
 }
 
 // shared axes
@@ -353,6 +400,127 @@ cv3.addEventListener('pointerup',()=>dragging=false);
 cv3.addEventListener('pointercancel',()=>dragging=false);
 
 render3();
+
+// MODULE 4 — DEMANDA: ESTÁTICA COMPARATIVA
+const cv4=$('cv4'),ctx4=cv4.getContext('2d');
+const priceDemand=$('priceDemand'), demandShift=$('demandShift');
+let step4=1;
+
+function makeDemandAxes(ctx,cv){
+  const pad={l:72,r:28,t:30,b:68}, xmax=12, ymax=12;
+  const sx=x=>pad.l+x/xmax*(cv.width-pad.l-pad.r);
+  const sy=y=>cv.height-pad.b-y/ymax*(cv.height-pad.t-pad.b);
+
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1;
+  ctx.font='13px system-ui'; ctx.fillStyle='#667085';
+
+  for(let i=0;i<=12;i+=2){
+    ctx.beginPath();ctx.moveTo(sx(i),sy(0));ctx.lineTo(sx(i),sy(12));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(sx(0),sy(i));ctx.lineTo(sx(12),sy(i));ctx.stroke();
+    ctx.fillText(i,sx(i)-4,sy(0)+24);
+    if(i>0) ctx.fillText(i,sx(0)-28,sy(i)+4);
+  }
+
+  ctx.strokeStyle='#111827';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(12),sy(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(0),sy(12));ctx.stroke();
+
+  ctx.fillStyle='#14213d';ctx.font='bold 15px system-ui';
+  ctx.fillText('Cantidad Q',sx(6)-34,cv.height-20);
+  ctx.save();ctx.translate(20,sy(6)+24);ctx.rotate(-Math.PI/2);ctx.fillText('Precio P',0,0);ctx.restore();
+  return {sx,sy};
+}
+
+function drawDemandLine(ctx,ax,a,b,color,width=4,dashed=false,label='D'){
+  const q0=Math.max(0,Math.min(12,a/b));
+  ctx.save();
+  ctx.strokeStyle=color;ctx.lineWidth=width;
+  ctx.setLineDash(dashed?[9,7]:[]);
+  ctx.beginPath();
+  ctx.moveTo(ax.sx(0),ax.sy(Math.min(12,a)));
+  ctx.lineTo(ax.sx(q0),ax.sy(Math.max(0,a-b*q0)));
+  ctx.stroke();
+  ctx.restore();
+
+  let qLabel=Math.min(q0*0.82,10.5);
+  let pLabel=a-b*qLabel;
+  if(pLabel>=0 && pLabel<=12){
+    ctx.fillStyle=color;ctx.font='bold 15px system-ui';
+    ctx.fillText(label,ax.sx(qLabel)+8,ax.sy(pLabel)-8);
+  }
+}
+
+function drawObservedPoint(ax,a,b,P){
+  let Q=(a-P)/b;
+  if(Q<0 || Q>12 || P<0 || P>12) return;
+  ctx4.save();
+  ctx4.setLineDash([5,5]);ctx4.strokeStyle='#f59e0b';ctx4.lineWidth=1.5;
+  ctx4.beginPath();ctx4.moveTo(ax.sx(Q),ax.sy(0));ctx4.lineTo(ax.sx(Q),ax.sy(P));ctx4.lineTo(ax.sx(0),ax.sy(P));ctx4.stroke();
+  ctx4.restore();
+
+  ctx4.beginPath();ctx4.fillStyle='#f59e0b';
+  ctx4.arc(ax.sx(Q),ax.sy(P),8,0,Math.PI*2);ctx4.fill();
+  ctx4.fillStyle='#92400e';ctx4.font='bold 14px system-ui';
+  ctx4.fillText('A',ax.sx(Q)+11,ax.sy(P)-10);
+}
+
+function render4(){
+  const ax=makeDemandAxes(ctx4,cv4);
+  const a0=9, b0=0.75;
+  const P=+priceDemand.value;
+  const shift=+demandShift.value;
+
+  let a=a0, currentB=b0;
+
+  if(step4===1){
+    a=a0; currentB=b0;
+    drawDemandLine(ctx4,ax,a0,b0,'#2563eb',4,false,'D');
+    drawObservedPoint(ax,a0,b0,P);
+
+    $('note4').innerHTML='<strong>Movimiento sobre la curva.</strong> Cambia el precio observado. La demanda no se desplaza: cambia la <strong>cantidad demandada</strong> a lo largo de la misma curva.';
+  }
+
+  if(step4===2){
+    a=a0+shift; currentB=b0;
+    drawDemandLine(ctx4,ax,a0,b0,'#98a2b3',3,true,'D₀');
+    drawDemandLine(ctx4,ax,a,b0,'#2563eb',4,false,'D₁');
+    drawObservedPoint(ax,a,b0,P);
+
+    const direction=shift>0?'hacia la derecha':shift<0?'hacia la izquierda':'sin desplazamiento';
+    $('note4').innerHTML='<strong>Desplazamiento de la demanda.</strong> Un cambio en un determinante distinto del precio del propio bien mueve toda la curva <strong>'+direction+'</strong>. La pendiente permanece constante.';
+  }
+
+  const Q=Math.max(0,(a-P)/currentB);
+
+  $('priceVal').textContent=P.toFixed(1).replace('.',',');
+  $('shiftVal').textContent=(shift>0?'+':'')+shift.toFixed(1).replace('.',',');
+  $('demP').textContent=P.toFixed(1).replace('.',',');
+  $('demQ').textContent=Q.toFixed(1).replace('.',',');
+  $('demA').textContent=a.toFixed(1).replace('.',',');
+
+  priceDemand.disabled=false;
+  demandShift.disabled=step4!==2;
+}
+
+function setStep4(s){
+  step4=s;
+  ['dmb1','dmb2'].forEach((id,i)=>$(id).classList.toggle('active',i+1===s));
+  render4();
+}
+
+$('dmb1').onclick=()=>setStep4(1);
+$('dmb2').onclick=()=>setStep4(2);
+$('reset4').onclick=()=>{
+  priceDemand.value=5;
+  demandShift.value=0;
+  setStep4(1);
+};
+priceDemand.oninput=render4;
+demandShift.oninput=render4;
+render4();
+
 </script>
 </body>
 </html>
