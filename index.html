@@ -61,6 +61,7 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     <button id="tabProfit">Maximizar beneficio</button>
     <button id="tabMarket">Oferta y demanda</button>
     <button id="tabComparative">Estática comparativa</button>
+    <button id="tabInelastic">Demanda perfectamente inelástica</button>
   </div>
 
   <!-- MÓDULO 1 -->
@@ -512,10 +513,10 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
           <h3>Estática comparativa: desplazamientos de oferta y demanda</h3>
           <p>Mueve la <strong>demanda</strong> y la <strong>oferta</strong>. El gráfico conserva el equilibrio inicial y calcula automáticamente el nuevo equilibrio.</p>
 
-          <label>Desplazamiento de la demanda: <span id="compDVal" class="value">0,0</span></label>
+          <label>Cambio en la demanda (+ aumenta / − disminuye): <span id="compDVal" class="value">0,0</span></label>
           <input id="compDShift" type="range" min="-3" max="3" step="0.2" value="0">
 
-          <label>Desplazamiento de la oferta: <span id="compSVal" class="value">0,0</span></label>
+          <label>Cambio en la oferta (+ aumenta / − disminuye): <span id="compSVal" class="value">0,0</span></label>
           <input id="compSShift" type="range" min="-3" max="3" step="0.2" value="0">
 
           <div class="kpis">
@@ -523,6 +524,44 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
             <div class="kpi"><span>Cantidad inicial Q₀</span><b id="compQ0">0,0</b></div>
             <div class="kpi"><span>Nuevo precio P₁</span><b id="compP1">0,0</b></div>
             <div class="kpi"><span>Nueva cantidad Q₁</span><b id="compQ1">0,0</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- MÓDULO DEMANDA PERFECTAMENTE INELÁSTICA -->
+  <section id="modInelastic" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="inelasticReset">Reiniciar</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <canvas id="cvInelastic" width="800" height="600"></canvas>
+          <div class="legend">
+            <span><span class="dot" style="background:#2563eb"></span>Demanda perfectamente inelástica</span>
+            <span><span class="dot" style="background:#98a2b3"></span>Oferta inicial</span>
+            <span><span class="dot" style="background:#dc2626"></span>Nueva oferta</span>
+            <span><span class="dot" style="background:#16a34a"></span>Nuevo equilibrio</span>
+          </div>
+          <div id="inelasticNote" class="note"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Demanda perfectamente inelástica</h3>
+          <p>La cantidad demandada se mantiene fija. Mueve únicamente la <strong>oferta</strong> y observa cómo cambia el precio de equilibrio sin cambiar la cantidad.</p>
+
+          <label>Cambio en la oferta (+ aumenta / − disminuye): <span id="inelasticSVal" class="value">0,0</span></label>
+          <input id="inelasticSShift" type="range" min="-3" max="3" step="0.2" value="0">
+
+          <div class="kpis">
+            <div class="kpi"><span>Cantidad de equilibrio inicial Q₀</span><b id="inelasticQ0">5,0</b></div>
+            <div class="kpi"><span>Precio de equilibrio inicial P₀</span><b id="inelasticP0">0,0</b></div>
+            <div class="kpi"><span>Nueva cantidad Q₁</span><b id="inelasticQ1">5,0</b></div>
+            <div class="kpi"><span>Nuevo precio P₁</span><b id="inelasticP1">0,0</b></div>
           </div>
         </div>
       </div>
@@ -541,7 +580,7 @@ function switchTab(n){
     $('tab'+i).classList.toggle('active',i===n);
     $('mod'+i).classList.toggle('active',i===n);
   });
-  ['Prod','Cost','Profit','Market','Comparative'].forEach(k=>{
+  ['Prod','Cost','Profit','Market','Comparative','Inelastic'].forEach(k=>{
     $('tab'+k).classList.remove('active');
     $('mod'+k).classList.remove('active');
   });
@@ -1728,7 +1767,7 @@ function compEquilibrium(dShift,sShift){
   // Desplazamiento vertical de interceptos:
   // D1: P = (CD_A + dShift) - CD_B Q
   // S1: P = (CS_A + sShift) + CS_B Q
-  const aD=CD_A+dShift, aS=CS_A+sShift;
+  const aD=CD_A+dShift, aS=CS_A-sShift;
   const Q=(aD-aS)/(CD_B+CS_B);
   const P=aD-CD_B*Q;
   return {P,Q,aD,aS};
@@ -1820,8 +1859,8 @@ function renderComparative(){
   $('compP1').textContent=e1.P.toFixed(1).replace('.',',');
   $('compQ1').textContent=e1.Q.toFixed(1).replace('.',',');
 
-  let dText=d>0?'aumenta':d<0?'disminuye':'no cambia';
-  let sText=s>0?'se desplaza hacia arriba/izquierda':s<0?'se desplaza hacia abajo/derecha':'no cambia';
+  let dText=d>0?'aumenta y se desplaza a la derecha':d<0?'disminuye y se desplaza a la izquierda':'no cambia';
+  let sText=s>0?'aumenta y se desplaza a la derecha/abajo':s<0?'disminuye y se desplaza a la izquierda/arriba':'no cambia';
 
   $('compNote').innerHTML=
     '<strong>Nuevo equilibrio.</strong> La demanda <strong>'+dText+'</strong> y la oferta <strong>'+sText+'</strong>. '+
@@ -1832,6 +1871,106 @@ function renderComparative(){
 $('compReset').onclick=()=>{compDShift.value=0;compSShift.value=0;renderComparative();};
 [compDShift,compSShift].forEach(el=>el.oninput=renderComparative);
 renderComparative();
+
+
+// --- MÓDULO: DEMANDA PERFECTAMENTE INELÁSTICA ---
+const cvInelastic=$('cvInelastic'),ctxInelastic=cvInelastic.getContext('2d');
+const inelasticSShift=$('inelasticSShift');
+
+const IN_Q=5;      // cantidad fija demandada
+const IN_SA=1;     // intercepto oferta inicial
+const IN_SB=.8;    // pendiente oferta
+
+function renderInelastic(){
+  const s=+inelasticSShift.value;
+  const P0=IN_SA + IN_SB*IN_Q;
+  const P1=(IN_SA-s) + IN_SB*IN_Q;
+
+  const pad={l:72,r:28,t:30,b:64}, xmax=10, ymax=10;
+  const sx=x=>pad.l+x/xmax*(cvInelastic.width-pad.l-pad.r);
+  const sy=y=>cvInelastic.height-pad.b-y/ymax*(cvInelastic.height-pad.t-pad.b);
+
+  ctxInelastic.clearRect(0,0,cvInelastic.width,cvInelastic.height);
+  ctxInelastic.fillStyle='#fff';ctxInelastic.fillRect(0,0,cvInelastic.width,cvInelastic.height);
+
+  // Grid
+  ctxInelastic.strokeStyle='#e5e7eb';ctxInelastic.lineWidth=1;
+  ctxInelastic.fillStyle='#667085';ctxInelastic.font='13px system-ui';
+  for(let x=0;x<=10;x+=2){
+    ctxInelastic.beginPath();ctxInelastic.moveTo(sx(x),sy(0));ctxInelastic.lineTo(sx(x),sy(ymax));ctxInelastic.stroke();
+    ctxInelastic.fillText(x,sx(x)-5,sy(0)+23);
+  }
+  for(let y=0;y<=10;y+=2){
+    ctxInelastic.beginPath();ctxInelastic.moveTo(sx(0),sy(y));ctxInelastic.lineTo(sx(xmax),sy(y));ctxInelastic.stroke();
+    if(y>0) ctxInelastic.fillText(y,sx(0)-30,sy(y)+4);
+  }
+
+  // Axes
+  ctxInelastic.strokeStyle='#111827';ctxInelastic.lineWidth=2;
+  ctxInelastic.beginPath();ctxInelastic.moveTo(sx(0),sy(0));ctxInelastic.lineTo(sx(xmax),sy(0));ctxInelastic.stroke();
+  ctxInelastic.beginPath();ctxInelastic.moveTo(sx(0),sy(0));ctxInelastic.lineTo(sx(0),sy(ymax));ctxInelastic.stroke();
+
+  ctxInelastic.fillStyle='#14213d';ctxInelastic.font='bold 15px system-ui';
+  ctxInelastic.fillText('Cantidad Q',sx(5)-36,cvInelastic.height-19);
+  ctxInelastic.save();ctxInelastic.translate(20,sy(5)+25);ctxInelastic.rotate(-Math.PI/2);ctxInelastic.fillText('Precio P',0,0);ctxInelastic.restore();
+
+  // Demand vertical
+  ctxInelastic.strokeStyle='#2563eb';ctxInelastic.lineWidth=5;
+  ctxInelastic.beginPath();ctxInelastic.moveTo(sx(IN_Q),sy(0));ctxInelastic.lineTo(sx(IN_Q),sy(ymax));ctxInelastic.stroke();
+
+  // Initial supply
+  ctxInelastic.save();
+  ctxInelastic.strokeStyle='#98a2b3';ctxInelastic.lineWidth=3;ctxInelastic.setLineDash([7,6]);
+  ctxInelastic.beginPath();
+  ctxInelastic.moveTo(sx(0),sy(IN_SA));
+  ctxInelastic.lineTo(sx((ymax-IN_SA)/IN_SB),sy(ymax));
+  ctxInelastic.stroke();
+  ctxInelastic.restore();
+
+  // New supply
+  const newIntercept=IN_SA-s;
+  ctxInelastic.strokeStyle='#dc2626';ctxInelastic.lineWidth=4;
+  ctxInelastic.beginPath();
+  ctxInelastic.moveTo(sx(0),sy(newIntercept));
+  ctxInelastic.lineTo(sx((ymax-newIntercept)/IN_SB),sy(ymax));
+  ctxInelastic.stroke();
+
+  // Equilibrium initial
+  ctxInelastic.save();ctxInelastic.setLineDash([5,5]);ctxInelastic.strokeStyle='#98a2b3';ctxInelastic.lineWidth=1.5;
+  ctxInelastic.beginPath();ctxInelastic.moveTo(sx(0),sy(P0));ctxInelastic.lineTo(sx(IN_Q),sy(P0));ctxInelastic.stroke();
+  ctxInelastic.restore();
+  ctxInelastic.beginPath();ctxInelastic.fillStyle='#98a2b3';ctxInelastic.arc(sx(IN_Q),sy(P0),6,0,Math.PI*2);ctxInelastic.fill();
+  ctxInelastic.fillStyle='#667085';ctxInelastic.font='bold 13px system-ui';
+  ctxInelastic.fillText('E₀',sx(IN_Q)+10,sy(P0)-9);
+
+  // New equilibrium
+  ctxInelastic.save();ctxInelastic.setLineDash([5,5]);ctxInelastic.strokeStyle='#16a34a';ctxInelastic.lineWidth=1.8;
+  ctxInelastic.beginPath();ctxInelastic.moveTo(sx(0),sy(P1));ctxInelastic.lineTo(sx(IN_Q),sy(P1));ctxInelastic.stroke();
+  ctxInelastic.restore();
+  ctxInelastic.beginPath();ctxInelastic.fillStyle='#16a34a';ctxInelastic.arc(sx(IN_Q),sy(P1),8,0,Math.PI*2);ctxInelastic.fill();
+  ctxInelastic.fillStyle='#14532d';ctxInelastic.font='bold 13px system-ui';
+  ctxInelastic.fillText('E₁',sx(IN_Q)+10,sy(P1)-10);
+
+  $('inelasticSVal').textContent=(s>0?'+':'')+s.toFixed(1).replace('.',',');
+  $('inelasticQ0').textContent=IN_Q.toFixed(1).replace('.',',');
+  $('inelasticP0').textContent=P0.toFixed(1).replace('.',',');
+  $('inelasticQ1').textContent=IN_Q.toFixed(1).replace('.',',');
+  $('inelasticP1').textContent=P1.toFixed(1).replace('.',',');
+
+  let note;
+  if(Math.abs(s)<0.01){
+    note='<strong>Situación inicial.</strong> La demanda es perfectamente inelástica: la cantidad de equilibrio es fija en Q = '+IN_Q.toFixed(1).replace('.',',')+'.';
+  }else if(s>0){
+    note='<strong>Aumento de la oferta.</strong> La curva de oferta se desplaza hacia la derecha/abajo. Como la demanda es perfectamente inelástica, <strong>la cantidad no cambia</strong> y todo el ajuste ocurre mediante una <strong>caída del precio de equilibrio</strong>.';
+  }else{
+    note='<strong>Disminución de la oferta.</strong> La curva de oferta se desplaza hacia la izquierda/arriba. Como la demanda es perfectamente inelástica, <strong>la cantidad no cambia</strong> y todo el ajuste ocurre mediante un <strong>aumento del precio de equilibrio</strong>.';
+  }
+  $('inelasticNote').innerHTML=note;
+}
+
+$('inelasticReset').onclick=()=>{inelasticSShift.value=0;renderInelastic();};
+inelasticSShift.oninput=renderInelastic;
+renderInelastic();
 
 // --- NAVEGACIÓN: EMPRESA ---
 function showCompanyModule(which){
@@ -1844,24 +1983,28 @@ function showCompanyModule(which){
   $('modProfit').classList.toggle('active',which==='profit');
   $('modMarket').classList.toggle('active',which==='market');
   $('modComparative').classList.toggle('active',which==='comparative');
+  $('modInelastic').classList.toggle('active',which==='inelastic');
 
   $('tabProd').classList.toggle('active',which==='prod');
   $('tabCost').classList.toggle('active',which==='cost');
   $('tabProfit').classList.toggle('active',which==='profit');
   $('tabMarket').classList.toggle('active',which==='market');
   $('tabComparative').classList.toggle('active',which==='comparative');
+  $('tabInelastic').classList.toggle('active',which==='inelastic');
 
   if(which==='prod') render();
   if(which==='cost') renderCost();
   if(which==='profit') renderProfit();
   if(which==='market') renderMarket();
   if(which==='comparative') renderComparative();
+  if(which==='inelastic') renderInelastic();
 }
 $('tabProd').onclick=()=>showCompanyModule('prod');
 $('tabCost').onclick=()=>showCompanyModule('cost');
 $('tabProfit').onclick=()=>showCompanyModule('profit');
 $('tabMarket').onclick=()=>showCompanyModule('market');
 $('tabComparative').onclick=()=>showCompanyModule('comparative');
+$('tabInelastic').onclick=()=>showCompanyModule('inelastic');
 
 </script>
 </body>
