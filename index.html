@@ -59,6 +59,8 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     <button id="tabProd">Función de producción</button>
     <button id="tabCost">Costos</button>
     <button id="tabProfit">Maximizar beneficio</button>
+    <button id="tabMarket">Oferta y demanda</button>
+    <button id="tabComparative">Estática comparativa</button>
   </div>
 
   <!-- MÓDULO 1 -->
@@ -451,6 +453,82 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     </div>
   </section>
 
+
+  <!-- MÓDULO OFERTA Y DEMANDA -->
+  <section id="modMarket" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="marketReset">Reiniciar</button>
+      </div>
+      <div class="row">
+        <div>
+          <canvas id="cvMarket" width="800" height="600"></canvas>
+          <div class="legend">
+            <span><span class="dot" style="background:#2563eb"></span>Demanda</span>
+            <span><span class="dot" style="background:#dc2626"></span>Oferta</span>
+            <span><span class="dot" style="background:#111827"></span>Precio seleccionado</span>
+          </div>
+          <div id="marketNote" class="note"></div>
+        </div>
+        <div class="panel">
+          <h3>Oferta, demanda y ajuste del mercado</h3>
+          <p>Mueve únicamente el <strong>precio</strong> y observa las cantidades demandada y ofrecida.</p>
+          <label>Precio P: <span id="marketPriceVal" class="value">5,0</span></label>
+          <input id="marketPrice" type="range" min="1" max="9" step="0.1" value="5">
+          <div class="kpis">
+            <div class="kpi"><span>Cantidad demandada Qd</span><b id="marketQd">0,0</b></div>
+            <div class="kpi"><span>Cantidad ofrecida Qo</span><b id="marketQs">0,0</b></div>
+            <div class="kpi"><span>Precio de equilibrio P*</span><b id="marketPe">0,0</b></div>
+            <div class="kpi"><span>Cantidad de equilibrio Q*</span><b id="marketQe">0,0</b></div>
+            <div class="kpi"><span>Situación del mercado</span><b id="marketState">Equilibrio</b></div>
+            <div class="kpi"><span>Brecha |Qd − Qo|</span><b id="marketGap">0,0</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- MÓDULO ESTÁTICA COMPARATIVA DE MERCADO -->
+  <section id="modComparative" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="compReset">Reiniciar</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <canvas id="cvComparative" width="800" height="600"></canvas>
+          <div class="legend">
+            <span><span class="dot" style="background:#98a2b3"></span>Curvas iniciales</span>
+            <span><span class="dot" style="background:#2563eb"></span>Demanda nueva</span>
+            <span><span class="dot" style="background:#dc2626"></span>Oferta nueva</span>
+            <span><span class="dot" style="background:#16a34a"></span>Nuevo equilibrio</span>
+          </div>
+          <div id="compNote" class="note"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Estática comparativa: desplazamientos de oferta y demanda</h3>
+          <p>Mueve la <strong>demanda</strong> y la <strong>oferta</strong>. El gráfico conserva el equilibrio inicial y calcula automáticamente el nuevo equilibrio.</p>
+
+          <label>Desplazamiento de la demanda: <span id="compDVal" class="value">0,0</span></label>
+          <input id="compDShift" type="range" min="-3" max="3" step="0.2" value="0">
+
+          <label>Desplazamiento de la oferta: <span id="compSVal" class="value">0,0</span></label>
+          <input id="compSShift" type="range" min="-3" max="3" step="0.2" value="0">
+
+          <div class="kpis">
+            <div class="kpi"><span>Precio inicial P₀</span><b id="compP0">0,0</b></div>
+            <div class="kpi"><span>Cantidad inicial Q₀</span><b id="compQ0">0,0</b></div>
+            <div class="kpi"><span>Nuevo precio P₁</span><b id="compP1">0,0</b></div>
+            <div class="kpi"><span>Nueva cantidad Q₁</span><b id="compQ1">0,0</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 <script>
@@ -463,7 +541,7 @@ function switchTab(n){
     $('tab'+i).classList.toggle('active',i===n);
     $('mod'+i).classList.toggle('active',i===n);
   });
-  ['Prod','Cost','Profit'].forEach(k=>{
+  ['Prod','Cost','Profit','Market','Comparative'].forEach(k=>{
     $('tab'+k).classList.remove('active');
     $('mod'+k).classList.remove('active');
   });
@@ -1535,6 +1613,226 @@ profitQ.oninput=renderProfit;
 renderProfit();
 
 
+
+// --- MÓDULO: OFERTA Y DEMANDA ---
+const cvMarket=$('cvMarket'),ctxMarket=cvMarket.getContext('2d');
+const marketPrice=$('marketPrice');
+
+const MD_A=9, MD_B=.8, MS_A=1, MS_B=.8;
+
+function marketQdAt(P){ return Math.max(0,(MD_A-P)/MD_B); }
+function marketQsAt(P){ return Math.max(0,(P-MS_A)/MS_B); }
+
+function renderMarket(){
+  const P=+marketPrice.value;
+  const Pe=(MD_A*MS_B + MS_A*MD_B)/(MD_B+MS_B);
+  const Qe=(MD_A-Pe)/MD_B;
+  const Qd=marketQdAt(P);
+  const Qs=marketQsAt(P);
+  const gap=Math.abs(Qd-Qs);
+
+  const pad={l:72,r:28,t:30,b:64}, xmax=11, ymax=10;
+  const sx=x=>pad.l+x/xmax*(cvMarket.width-pad.l-pad.r);
+  const sy=y=>cvMarket.height-pad.b-y/ymax*(cvMarket.height-pad.t-pad.b);
+
+  ctxMarket.clearRect(0,0,cvMarket.width,cvMarket.height);
+  ctxMarket.fillStyle='#fff';ctxMarket.fillRect(0,0,cvMarket.width,cvMarket.height);
+
+  ctxMarket.strokeStyle='#e5e7eb';ctxMarket.lineWidth=1;
+  ctxMarket.fillStyle='#667085';ctxMarket.font='13px system-ui';
+  for(let x=0;x<=10;x+=2){
+    ctxMarket.beginPath();ctxMarket.moveTo(sx(x),sy(0));ctxMarket.lineTo(sx(x),sy(ymax));ctxMarket.stroke();
+    ctxMarket.fillText(x,sx(x)-5,sy(0)+23);
+  }
+  for(let y=0;y<=10;y+=2){
+    ctxMarket.beginPath();ctxMarket.moveTo(sx(0),sy(y));ctxMarket.lineTo(sx(xmax),sy(y));ctxMarket.stroke();
+    if(y>0) ctxMarket.fillText(y,sx(0)-30,sy(y)+4);
+  }
+
+  ctxMarket.strokeStyle='#111827';ctxMarket.lineWidth=2;
+  ctxMarket.beginPath();ctxMarket.moveTo(sx(0),sy(0));ctxMarket.lineTo(sx(xmax),sy(0));ctxMarket.stroke();
+  ctxMarket.beginPath();ctxMarket.moveTo(sx(0),sy(0));ctxMarket.lineTo(sx(0),sy(ymax));ctxMarket.stroke();
+
+  ctxMarket.fillStyle='#14213d';ctxMarket.font='bold 15px system-ui';
+  ctxMarket.fillText('Cantidad Q',sx(5.5)-36,cvMarket.height-19);
+  ctxMarket.save();ctxMarket.translate(20,sy(5)+25);ctxMarket.rotate(-Math.PI/2);ctxMarket.fillText('Precio P',0,0);ctxMarket.restore();
+
+  ctxMarket.strokeStyle='#2563eb';ctxMarket.lineWidth=4;
+  ctxMarket.beginPath();ctxMarket.moveTo(sx(0),sy(MD_A));ctxMarket.lineTo(sx(MD_A/MD_B),sy(0));ctxMarket.stroke();
+
+  ctxMarket.strokeStyle='#dc2626';ctxMarket.lineWidth=4;
+  ctxMarket.beginPath();ctxMarket.moveTo(sx(0),sy(MS_A));ctxMarket.lineTo(sx((ymax-MS_A)/MS_B),sy(ymax));ctxMarket.stroke();
+
+  ctxMarket.save();ctxMarket.setLineDash([6,5]);ctxMarket.strokeStyle='#98a2b3';ctxMarket.lineWidth=1.6;
+  ctxMarket.beginPath();ctxMarket.moveTo(sx(Qe),sy(0));ctxMarket.lineTo(sx(Qe),sy(Pe));ctxMarket.stroke();
+  ctxMarket.beginPath();ctxMarket.moveTo(sx(0),sy(Pe));ctxMarket.lineTo(sx(Qe),sy(Pe));ctxMarket.stroke();
+  ctxMarket.restore();
+
+  ctxMarket.beginPath();ctxMarket.fillStyle='#16a34a';ctxMarket.arc(sx(Qe),sy(Pe),7,0,Math.PI*2);ctxMarket.fill();
+  ctxMarket.fillStyle='#14532d';ctxMarket.font='bold 13px system-ui';
+  ctxMarket.fillText('E*',sx(Qe)+10,sy(Pe)-10);
+
+  ctxMarket.strokeStyle='#111827';ctxMarket.lineWidth=3;
+  ctxMarket.beginPath();ctxMarket.moveTo(sx(0),sy(P));ctxMarket.lineTo(sx(Math.max(Qd,Qs)+.6),sy(P));ctxMarket.stroke();
+
+  ctxMarket.beginPath();ctxMarket.fillStyle='#2563eb';ctxMarket.arc(sx(Qd),sy(P),7,0,Math.PI*2);ctxMarket.fill();
+  ctxMarket.beginPath();ctxMarket.fillStyle='#dc2626';ctxMarket.arc(sx(Qs),sy(P),7,0,Math.PI*2);ctxMarket.fill();
+
+  const left=Math.min(Qd,Qs), right=Math.max(Qd,Qs);
+  ctxMarket.save();ctxMarket.strokeStyle=P<Pe?'#f59e0b':'#7c3aed';ctxMarket.lineWidth=7;
+  ctxMarket.beginPath();ctxMarket.moveTo(sx(left),sy(P));ctxMarket.lineTo(sx(right),sy(P));ctxMarket.stroke();
+  ctxMarket.restore();
+
+  ctxMarket.fillStyle='#14213d';ctxMarket.font='bold 13px system-ui';
+  ctxMarket.fillText('Qo',sx(Qs)-8,sy(P)-13);
+  ctxMarket.fillText('Qd',sx(Qd)-8,sy(P)-13);
+
+  let state, note;
+  const tol=.06;
+  if(Math.abs(P-Pe)<=tol){
+    state='Equilibrio';
+    note='<strong>Equilibrio.</strong> A este precio, la cantidad demandada coincide con la cantidad ofrecida: <strong>Qd = Qo</strong>. No existe presión inmediata para que el precio cambie.';
+  }else if(P<Pe){
+    state='Escasez';
+    note='<strong>Escasez o exceso de demanda.</strong> El precio está bajo el equilibrio, por lo que <strong>Qd &gt; Qo</strong>. Los consumidores quieren comprar más de lo que las empresas desean vender, generando presión para que el precio suba.';
+  }else{
+    state='Exceso';
+    note='<strong>Exceso de oferta.</strong> El precio está sobre el equilibrio, por lo que <strong>Qo &gt; Qd</strong>. Las empresas desean vender más de lo que los consumidores quieren comprar, generando presión para que el precio baje.';
+  }
+
+  $('marketPriceVal').textContent=P.toFixed(1).replace('.',',');
+  $('marketQd').textContent=Qd.toFixed(1).replace('.',',');
+  $('marketQs').textContent=Qs.toFixed(1).replace('.',',');
+  $('marketPe').textContent=Pe.toFixed(1).replace('.',',');
+  $('marketQe').textContent=Qe.toFixed(1).replace('.',',');
+  $('marketState').textContent=state;
+  $('marketGap').textContent=gap.toFixed(1).replace('.',',');
+  $('marketNote').innerHTML=note;
+}
+
+$('marketReset').onclick=()=>{marketPrice.value=5;renderMarket();};
+marketPrice.oninput=renderMarket;
+renderMarket();
+
+
+// --- MÓDULO: ESTÁTICA COMPARATIVA DE MERCADO ---
+const cvComparative=$('cvComparative'),ctxComparative=cvComparative.getContext('2d');
+const compDShift=$('compDShift'),compSShift=$('compSShift');
+
+// Curvas iniciales:
+// D0: P = 9 - 0.8Q
+// S0: P = 1 + 0.8Q
+const CD_A=9, CD_B=.8, CS_A=1, CS_B=.8;
+
+function compEquilibrium(dShift,sShift){
+  // Desplazamiento vertical de interceptos:
+  // D1: P = (CD_A + dShift) - CD_B Q
+  // S1: P = (CS_A + sShift) + CS_B Q
+  const aD=CD_A+dShift, aS=CS_A+sShift;
+  const Q=(aD-aS)/(CD_B+CS_B);
+  const P=aD-CD_B*Q;
+  return {P,Q,aD,aS};
+}
+
+function renderComparative(){
+  const d=+compDShift.value, s=+compSShift.value;
+  const e0=compEquilibrium(0,0);
+  const e1=compEquilibrium(d,s);
+
+  const pad={l:72,r:28,t:30,b:64}, xmax=11, ymax=12;
+  const sx=x=>pad.l+x/xmax*(cvComparative.width-pad.l-pad.r);
+  const sy=y=>cvComparative.height-pad.b-y/ymax*(cvComparative.height-pad.t-pad.b);
+
+  ctxComparative.clearRect(0,0,cvComparative.width,cvComparative.height);
+  ctxComparative.fillStyle='#fff';ctxComparative.fillRect(0,0,cvComparative.width,cvComparative.height);
+
+  ctxComparative.strokeStyle='#e5e7eb';ctxComparative.lineWidth=1;
+  ctxComparative.fillStyle='#667085';ctxComparative.font='13px system-ui';
+  for(let x=0;x<=10;x+=2){
+    ctxComparative.beginPath();ctxComparative.moveTo(sx(x),sy(0));ctxComparative.lineTo(sx(x),sy(ymax));ctxComparative.stroke();
+    ctxComparative.fillText(x,sx(x)-5,sy(0)+23);
+  }
+  for(let y=0;y<=12;y+=2){
+    ctxComparative.beginPath();ctxComparative.moveTo(sx(0),sy(y));ctxComparative.lineTo(sx(xmax),sy(y));ctxComparative.stroke();
+    if(y>0) ctxComparative.fillText(y,sx(0)-30,sy(y)+4);
+  }
+
+  ctxComparative.strokeStyle='#111827';ctxComparative.lineWidth=2;
+  ctxComparative.beginPath();ctxComparative.moveTo(sx(0),sy(0));ctxComparative.lineTo(sx(xmax),sy(0));ctxComparative.stroke();
+  ctxComparative.beginPath();ctxComparative.moveTo(sx(0),sy(0));ctxComparative.lineTo(sx(0),sy(ymax));ctxComparative.stroke();
+
+  ctxComparative.fillStyle='#14213d';ctxComparative.font='bold 15px system-ui';
+  ctxComparative.fillText('Cantidad Q',sx(5.5)-36,cvComparative.height-19);
+  ctxComparative.save();ctxComparative.translate(20,sy(6)+25);ctxComparative.rotate(-Math.PI/2);ctxComparative.fillText('Precio P',0,0);ctxComparative.restore();
+
+  // Curvas iniciales grises
+  ctxComparative.save();
+  ctxComparative.strokeStyle='#98a2b3';ctxComparative.lineWidth=2.5;ctxComparative.setLineDash([7,6]);
+
+  ctxComparative.beginPath();
+  ctxComparative.moveTo(sx(0),sy(CD_A));
+  ctxComparative.lineTo(sx(CD_A/CD_B),sy(0));
+  ctxComparative.stroke();
+
+  ctxComparative.beginPath();
+  ctxComparative.moveTo(sx(0),sy(CS_A));
+  ctxComparative.lineTo(sx((ymax-CS_A)/CS_B),sy(ymax));
+  ctxComparative.stroke();
+  ctxComparative.restore();
+
+  // Nueva demanda
+  ctxComparative.strokeStyle='#2563eb';ctxComparative.lineWidth=4;
+  ctxComparative.beginPath();
+  ctxComparative.moveTo(sx(0),sy(e1.aD));
+  ctxComparative.lineTo(sx(e1.aD/CD_B),sy(0));
+  ctxComparative.stroke();
+
+  // Nueva oferta
+  ctxComparative.strokeStyle='#dc2626';ctxComparative.lineWidth=4;
+  ctxComparative.beginPath();
+  ctxComparative.moveTo(sx(0),sy(e1.aS));
+  ctxComparative.lineTo(sx((ymax-e1.aS)/CS_B),sy(ymax));
+  ctxComparative.stroke();
+
+  // Equilibrio inicial
+  ctxComparative.save();ctxComparative.setLineDash([5,5]);ctxComparative.strokeStyle='#98a2b3';ctxComparative.lineWidth=1.5;
+  ctxComparative.beginPath();ctxComparative.moveTo(sx(e0.Q),sy(0));ctxComparative.lineTo(sx(e0.Q),sy(e0.P));ctxComparative.stroke();
+  ctxComparative.beginPath();ctxComparative.moveTo(sx(0),sy(e0.P));ctxComparative.lineTo(sx(e0.Q),sy(e0.P));ctxComparative.stroke();
+  ctxComparative.restore();
+  ctxComparative.beginPath();ctxComparative.fillStyle='#98a2b3';ctxComparative.arc(sx(e0.Q),sy(e0.P),6,0,Math.PI*2);ctxComparative.fill();
+  ctxComparative.fillStyle='#667085';ctxComparative.font='bold 13px system-ui';
+  ctxComparative.fillText('E₀',sx(e0.Q)+9,sy(e0.P)-9);
+
+  // Nuevo equilibrio
+  ctxComparative.save();ctxComparative.setLineDash([5,5]);ctxComparative.strokeStyle='#16a34a';ctxComparative.lineWidth=1.8;
+  ctxComparative.beginPath();ctxComparative.moveTo(sx(e1.Q),sy(0));ctxComparative.lineTo(sx(e1.Q),sy(e1.P));ctxComparative.stroke();
+  ctxComparative.beginPath();ctxComparative.moveTo(sx(0),sy(e1.P));ctxComparative.lineTo(sx(e1.Q),sy(e1.P));ctxComparative.stroke();
+  ctxComparative.restore();
+
+  ctxComparative.beginPath();ctxComparative.fillStyle='#16a34a';ctxComparative.arc(sx(e1.Q),sy(e1.P),8,0,Math.PI*2);ctxComparative.fill();
+  ctxComparative.fillStyle='#14532d';ctxComparative.font='bold 13px system-ui';
+  ctxComparative.fillText('E₁',sx(e1.Q)+10,sy(e1.P)-10);
+
+  $('compDVal').textContent=(d>0?'+':'')+d.toFixed(1).replace('.',',');
+  $('compSVal').textContent=(s>0?'+':'')+s.toFixed(1).replace('.',',');
+  $('compP0').textContent=e0.P.toFixed(1).replace('.',',');
+  $('compQ0').textContent=e0.Q.toFixed(1).replace('.',',');
+  $('compP1').textContent=e1.P.toFixed(1).replace('.',',');
+  $('compQ1').textContent=e1.Q.toFixed(1).replace('.',',');
+
+  let dText=d>0?'aumenta':d<0?'disminuye':'no cambia';
+  let sText=s>0?'se desplaza hacia arriba/izquierda':s<0?'se desplaza hacia abajo/derecha':'no cambia';
+
+  $('compNote').innerHTML=
+    '<strong>Nuevo equilibrio.</strong> La demanda <strong>'+dText+'</strong> y la oferta <strong>'+sText+'</strong>. '+
+    'El punto gris E₀ mantiene el equilibrio inicial como referencia y el punto verde E₁ muestra el equilibrio resultante. '+
+    'Así puedes observar directamente cómo cambian <strong>P*</strong> y <strong>Q*</strong> ante distintos shocks.';
+}
+
+$('compReset').onclick=()=>{compDShift.value=0;compSShift.value=0;renderComparative();};
+[compDShift,compSShift].forEach(el=>el.oninput=renderComparative);
+renderComparative();
+
 // --- NAVEGACIÓN: EMPRESA ---
 function showCompanyModule(which){
   [1,2,3,4,5,6].forEach(i=>{
@@ -1544,16 +1842,26 @@ function showCompanyModule(which){
   $('modProd').classList.toggle('active',which==='prod');
   $('modCost').classList.toggle('active',which==='cost');
   $('modProfit').classList.toggle('active',which==='profit');
+  $('modMarket').classList.toggle('active',which==='market');
+  $('modComparative').classList.toggle('active',which==='comparative');
+
   $('tabProd').classList.toggle('active',which==='prod');
   $('tabCost').classList.toggle('active',which==='cost');
   $('tabProfit').classList.toggle('active',which==='profit');
+  $('tabMarket').classList.toggle('active',which==='market');
+  $('tabComparative').classList.toggle('active',which==='comparative');
+
   if(which==='prod') render();
   if(which==='cost') renderCost();
   if(which==='profit') renderProfit();
+  if(which==='market') renderMarket();
+  if(which==='comparative') renderComparative();
 }
 $('tabProd').onclick=()=>showCompanyModule('prod');
 $('tabCost').onclick=()=>showCompanyModule('cost');
 $('tabProfit').onclick=()=>showCompanyModule('profit');
+$('tabMarket').onclick=()=>showCompanyModule('market');
+$('tabComparative').onclick=()=>showCompanyModule('comparative');
 
 </script>
 </body>
