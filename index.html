@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Microeconomía interactiva</title>
+<title>Microeconomía interactiva: consumidor y empresa</title>
 <style>
 :root{
   --bg:#f7f8fb; --card:#fff; --ink:#14213d; --muted:#667085;
@@ -39,6 +39,9 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
 .kpi span{font-size:12px;color:var(--muted);display:block}.kpi b{font-size:17px}
 .status{font-weight:700}
 @media(max-width:820px){.row{grid-template-columns:1fr}.panel{order:-1}}
+
+.small{font-size:12px;color:var(--muted)}
+.cost-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
 </style>
 </head>
 <body>
@@ -53,6 +56,9 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     <button id="tab6">Elección óptima del consumidor</button>
     <button id="tab5">Elasticidad-precio</button>
     <button id="tab4">Demanda: estática comparativa</button>
+    <button id="tabProd">Función de producción</button>
+    <button id="tabCost">Costos</button>
+    <button id="tabProfit">Maximizar beneficio</button>
   </div>
 
   <!-- MÓDULO 1 -->
@@ -310,6 +316,141 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     </div>
   </section>
 
+
+  <!-- PRODUCCIÓN, COSTOS Y MAXIMIZACIÓN DE BENEFICIO -->
+<section id="modProd" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="btnTotal" class="active">1. Producto total</button>
+        <button id="btnMarginal">2. Producto marginal</button>
+        <button id="btnAll">3. Producto total + marginal</button>
+        <button id="reset">Reiniciar</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <canvas id="cv" width="800" height="600"></canvas>
+          <div class="legend" id="prodLegend">
+            <span><span class="dot" style="background:#2563eb"></span>Curva principal</span>
+            <span><span class="dot" style="background:#f59e0b"></span>Punto actual</span>
+          </div>
+          <div id="note" class="note"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Controles</h3>
+          <p>Usamos una función Cobb-Douglas de corto plazo: <strong>Q = A·K<sup>0,4</sup>·L<sup>β</sup></strong>, con K fijo.</p>
+
+          <label>Trabajo L: <span id="lVal" class="value">4</span></label>
+          <input id="L" type="range" min="1" max="12" step="1" value="4">
+
+          <label>Capital K: <span id="kVal" class="value">4</span></label>
+          <input id="K" type="range" min="1" max="10" step="1" value="4">
+
+          <label>Tecnología A: <span id="aVal" class="value">3,0</span></label>
+          <input id="A" type="range" min="1" max="5" step="0.1" value="3">
+
+          <label>Exponente del trabajo β: <span id="bVal" class="value">0,60</span></label>
+          <input id="beta" type="range" min="0.2" max="0.9" step="0.05" value="0.6">
+
+          <div class="kpis">
+            <div class="kpi"><span>Producción Q</span><b id="qOut">0,0</b></div>
+            <div class="kpi"><span>PMgL</span><b id="mplOut">0,0</b></div>
+            <div class="kpi"><span>Capital fijo</span><b id="kOut">4</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section id="modCost" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="costCleanBtn" class="active">1. Costo medio + marginal</button>
+        <button id="costFullBtn">2. CMe + CMg + CFMe + CVMe</button>
+        <button id="costReset">Reiniciar</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <canvas id="cvCost" width="800" height="600"></canvas>
+          <div class="legend" id="costLegend"></div>
+          <div id="costNote" class="note"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Estructura de costos</h3>
+          <p>Compara primero el <strong>costo medio</strong> y el <strong>costo marginal</strong>. Luego agrega sus componentes: costo fijo medio y costo variable medio.</p>
+
+          <label>Producción Q: <span id="costQVal" class="value">10,0</span></label>
+          <input id="costQ" type="range" min="2" max="40" step="0.5" value="10">
+
+          <label>Salario por unidad de trabajo w: <span id="wVal" class="value">10</span></label>
+          <input id="wage" type="range" min="2" max="25" step="1" value="10">
+
+          <label>Costo fijo CF: <span id="fcVal" class="value">20</span></label>
+          <input id="fixedCost" type="range" min="0" max="80" step="5" value="20">
+
+          <label>Capital K: <span id="costKVal" class="value">4</span></label>
+          <input id="costK" type="range" min="1" max="10" step="1" value="4">
+
+          <label>Tecnología A: <span id="costAVal" class="value">3,0</span></label>
+          <input id="costA" type="range" min="1" max="5" step="0.1" value="3">
+
+          <div class="cost-grid">
+            <div class="kpi"><span>Costo fijo CF</span><b id="cfOut">20,0</b></div>
+            <div class="kpi"><span>Costo variable CV</span><b id="cvOut">0,0</b></div>
+            <div class="kpi"><span>Costo total CT</span><b id="ctOut">0,0</b></div>
+            <div class="kpi"><span>Costo marginal CMg</span><b id="cmgOut">0,0</b></div>
+            <div class="kpi"><span>Costo medio CMe</span><b id="cmeOut">0,0</b></div>
+            <div class="kpi"><span>Costo variable medio CVMe</span><b id="cvmeOut">0,0</b></div>
+            <div class="kpi"><span>Costo fijo medio CFMe</span><b id="cfmeOut">0,0</b></div>
+          </div>
+
+          <div class="small" style="margin-top:10px">
+            Relación utilizada: para producir Q se calcula el trabajo requerido L(Q) a partir de la función de producción.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section id="modProfit" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="profitReset">Reiniciar</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <canvas id="cvProfit" width="800" height="600"></canvas>
+          <div class="legend">
+            <span><span class="dot" style="background:#dc2626"></span>Costo marginal</span>
+            <span><span class="dot" style="background:#2563eb"></span>Precio = ingreso marginal</span>
+            <span><span class="dot" style="background:#7c3aed"></span>Beneficio total</span>
+            <span><span class="dot" style="background:#16a34a"></span>Q* óptimo</span>
+          </div>
+          <div id="profitNote" class="note"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Maximización de beneficios</h3>
+          <p>En competencia perfecta, el precio es dado y <strong>IMg = P</strong>. Mueve solo la cantidad producida y observa cómo cambia el beneficio.</p>
+
+          <label>Cantidad producida Q: <span id="profitQVal" class="value">10</span></label>
+          <input id="profitQ" type="range" min="0" max="40" step="1" value="10">
+
+          <div class="kpis">
+            <div class="kpi"><span>Precio = IMg</span><b id="profitPriceOut">30</b></div>
+            <div class="kpi"><span>CMg en Q</span><b id="profitMCOut">0,0</b></div>
+            <div class="kpi"><span>Beneficio total π(Q)</span><b id="profitPiOut">0,0</b></div>
+            <div class="kpi"><span>Q* donde P = CMg</span><b id="profitQStar">20</b></div>
+          </div>
+        </div>        </div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 <script>
@@ -321,6 +462,10 @@ function switchTab(n){
   [1,2,3,4,5,6].forEach(i=>{
     $('tab'+i).classList.toggle('active',i===n);
     $('mod'+i).classList.toggle('active',i===n);
+  });
+  ['Prod','Cost','Profit'].forEach(k=>{
+    $('tab'+k).classList.remove('active');
+    $('mod'+k).classList.remove('active');
   });
   if(n===2) render2();
   if(n===3) render3();
@@ -976,6 +1121,439 @@ $('elCaseInf').onclick=()=>setElasticityCase('infinite');
 $('reset5').onclick=()=>{pctP.value=-20;setElasticityCase('zero');};
 pctP.oninput=render5;
 render5();
+
+
+
+const cv=$('cv'),ctx=cv.getContext('2d');
+const L=$('L'),K=$('K'),A=$('A'),beta=$('beta');
+let mode='total';
+
+function qfun(l){
+  const a=+A.value,k=+K.value,b=+beta.value;
+  return a*Math.pow(k,0.4)*Math.pow(l,b);
+}
+function mpl(l){
+  const a=+A.value,k=+K.value,b=+beta.value;
+  return a*Math.pow(k,0.4)*b*Math.pow(l,b-1);
+}
+function currentFn(l){ return mode==='total'?qfun(l):mpl(l); }
+
+function axes(ymax){
+  const pad={l:72,r:(mode==='all'?72:28),t:30,b:68}, xmax=12;
+  const sx=x=>pad.l+x/xmax*(cv.width-pad.l-pad.r);
+  const sy=y=>cv.height-pad.b-y/ymax*(cv.height-pad.t-pad.b);
+
+  ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1;ctx.fillStyle='#667085';ctx.font='13px system-ui';
+
+  for(let x=0;x<=12;x+=2){
+    ctx.beginPath();ctx.moveTo(sx(x),sy(0));ctx.lineTo(sx(x),sy(ymax));ctx.stroke();
+    ctx.fillText(x,sx(x)-4,sy(0)+24);
+  }
+  for(let i=0;i<=5;i++){
+    const y=ymax*i/5;
+    ctx.beginPath();ctx.moveTo(sx(0),sy(y));ctx.lineTo(sx(12),sy(y));ctx.stroke();
+    if(i>0)ctx.fillText(y.toFixed(mode==='all'?0:1).replace('.',','),sx(0)-48,sy(y)+4);
+  }
+
+  ctx.strokeStyle='#111827';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(12),sy(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(0),sy(ymax));ctx.stroke();
+
+  ctx.fillStyle='#14213d';ctx.font='bold 15px system-ui';
+  ctx.fillText('Trabajo L',sx(6)-30,cv.height-20);
+
+  let ylabel = mode==='total'?'Producción Q':
+               mode==='marginal'?'Producto marginal del trabajo':
+               'Producto total Q';
+  ctx.save();ctx.translate(20,sy(ymax/2)+60);ctx.rotate(-Math.PI/2);ctx.fillText(ylabel,0,0);ctx.restore();
+
+  if(mode==='all'){
+    const y2max=25;
+    const sy2=y=>cv.height-pad.b-y/y2max*(cv.height-pad.t-pad.b);
+
+    ctx.strokeStyle='#111827';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(sx(12),sy(0));ctx.lineTo(sx(12),sy(ymax));ctx.stroke();
+
+    ctx.fillStyle='#667085';ctx.font='13px system-ui';
+    for(let i=0;i<=5;i++){
+      const y=y2max*i/5;
+      if(i>0)ctx.fillText(y.toFixed(0),sx(12)+10,sy2(y)+4);
+    }
+
+    ctx.fillStyle='#14213d';ctx.font='bold 15px system-ui';
+    ctx.save();ctx.translate(cv.width-18,sy(ymax/2)+75);ctx.rotate(Math.PI/2);
+    ctx.fillText('PMgL',0,0);ctx.restore();
+
+    return {sx,sy,sy2,y2max};
+  }
+
+  return {sx,sy};
+}
+
+function render(){
+  const l=+L.value,k=+K.value,a=+A.value,b=+beta.value;
+  const q=qfun(l),pm=mpl(l);
+
+  // Ejes fijos: facilitan ver desplazamientos de las curvas.
+  const fixedYMax = {
+    total: 80,
+    marginal: 15,
+    all: 80
+  };
+  const ymax=fixedYMax[mode];
+  const ax=axes(ymax);
+
+  function drawProdCurve(fn, syFn, color, width=4){
+    ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();
+    let started=false;
+    for(let x=.5;x<=12;x+=.05){
+      const y=fn(x);
+      if(!started){ctx.moveTo(ax.sx(x),syFn(y));started=true}
+      else ctx.lineTo(ax.sx(x),syFn(y));
+    }
+    ctx.stroke();ctx.restore();
+  }
+
+  if(mode==='all'){
+    // Producto total usa el eje izquierdo.
+    drawProdCurve(qfun,ax.sy,'#2563eb',4);
+    // El producto marginal usa el eje derecho para mantener ambas
+    // curvas legibles en un solo gráfico.
+    drawProdCurve(mpl,ax.sy2,'#dc2626',4);
+
+    // Puntos actuales sobre cada curva
+    [
+      [q,ax.sy,'#2563eb'],
+      [pm,ax.sy2,'#dc2626']
+    ].forEach(([val,syFn,color])=>{
+      ctx.beginPath();ctx.fillStyle=color;ctx.arc(ax.sx(l),syFn(val),7,0,Math.PI*2);ctx.fill();
+    });
+
+    // Guía vertical para L actual
+    ctx.save();ctx.setLineDash([5,5]);ctx.strokeStyle='#98a2b3';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(ax.sx(l),ax.sy(0));ctx.lineTo(ax.sx(l),ax.sy(ymax));ctx.stroke();ctx.restore();
+
+  }else{
+    drawProdCurve(currentFn,ax.sy,'#2563eb',4);
+
+    const yNow=currentFn(l);
+    ctx.save();ctx.setLineDash([5,5]);ctx.strokeStyle='#98a2b3';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(ax.sx(l),ax.sy(0));ctx.lineTo(ax.sx(l),ax.sy(yNow));ctx.lineTo(ax.sx(0),ax.sy(yNow));ctx.stroke();ctx.restore();
+
+    ctx.beginPath();ctx.fillStyle='#f59e0b';ctx.arc(ax.sx(l),ax.sy(yNow),9,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#92400e';ctx.font='bold 14px system-ui';ctx.fillText('A',ax.sx(l)+11,ax.sy(yNow)-10);
+  }
+
+  $('lVal').textContent=l.toFixed(0);$('kVal').textContent=k.toFixed(0);
+  $('aVal').textContent=a.toFixed(1).replace('.',',');$('bVal').textContent=b.toFixed(2).replace('.',',');
+  $('qOut').textContent=q.toFixed(2).replace('.',',');$('mplOut').textContent=pm.toFixed(2).replace('.',',');
+  $('kOut').textContent=k.toFixed(0);
+
+  if(mode==='all'){
+    $('prodLegend').innerHTML=
+      '<span><span class="dot" style="background:#2563eb"></span>Producto total</span>'+
+      '<span><span class="dot" style="background:#dc2626"></span>Producto marginal</span>';
+  }else{
+    $('prodLegend').innerHTML=
+      '<span><span class="dot" style="background:#2563eb"></span>Curva principal</span>'+
+      '<span><span class="dot" style="background:#f59e0b"></span>Punto actual</span>';
+  }
+
+  if(mode==='total'){
+    $('note').innerHTML='<strong>Producto total.</strong> Al aumentar L con K fijo, la producción crece. Como β&lt;1, la curva se va aplanando: cada unidad adicional de trabajo aporta menos producción que la anterior.';
+  }else if(mode==='marginal'){
+    $('note').innerHTML='<strong>Producto marginal del trabajo.</strong> Mide cuánto aumenta Q al sumar una unidad adicional de trabajo. Con β&lt;1, el PMgL cae a medida que aumenta L.';
+  }else{
+    $('note').innerHTML='<strong>Producto total y marginal.</strong> La curva azul muestra el <strong>producto total</strong> y se lee en el eje izquierdo. La curva roja muestra el <strong>producto marginal del trabajo</strong> y se lee en el eje derecho. Así se observa simultáneamente que la producción total sigue aumentando mientras el aporte de cada unidad adicional de trabajo disminuye.';
+  }
+}
+
+function setMode(m){
+  mode=m;$('btnTotal').classList.toggle('active',m==='total');$('btnMarginal').classList.toggle('active',m==='marginal');$('btnAll').classList.toggle('active',m==='all');render();
+}
+$('btnTotal').onclick=()=>setMode('total');$('btnMarginal').onclick=()=>setMode('marginal');$('btnAll').onclick=()=>setMode('all');
+$('reset').onclick=()=>{L.value=4;K.value=4;A.value=3;beta.value=.6;setMode('total')};
+[L,K,A,beta].forEach(el=>el.oninput=render);
+render();
+
+// --- MÓDULO DE COSTOS ---
+const cvCost=$('cvCost'),ctxCost=cvCost.getContext('2d');
+const costQ=$('costQ'),wage=$('wage'),fixedCost=$('fixedCost'),costK=$('costK'),costA=$('costA');
+let costMode='clean';
+const betaCost=0.6;
+
+function laborForQ(q){
+  const a=+costA.value, k=+costK.value;
+  return Math.pow(q/(a*Math.pow(k,0.4)),1/betaCost);
+}
+function variableCost(q){ return (+wage.value)*laborForQ(q); }
+function totalCost(q){ return (+fixedCost.value)+variableCost(q); }
+function avgVariableCost(q){ return variableCost(q)/q; }
+function avgTotalCost(q){ return totalCost(q)/q; }
+function marginalCost(q){
+  const h=0.01;
+  return (variableCost(q+h)-variableCost(Math.max(0.01,q-h)))/(2*h);
+}
+
+function costAxes(ymax){
+  const pad={l:78,r:28,t:30,b:68}, xmax=40;
+  const sx=x=>pad.l+x/xmax*(cvCost.width-pad.l-pad.r);
+  const sy=y=>cvCost.height-pad.b-y/ymax*(cvCost.height-pad.t-pad.b);
+  ctxCost.clearRect(0,0,cvCost.width,cvCost.height);
+  ctxCost.fillStyle='#fff';ctxCost.fillRect(0,0,cvCost.width,cvCost.height);
+  ctxCost.strokeStyle='#e5e7eb';ctxCost.lineWidth=1;ctxCost.fillStyle='#667085';ctxCost.font='13px system-ui';
+
+  for(let x=0;x<=40;x+=5){
+    ctxCost.beginPath();ctxCost.moveTo(sx(x),sy(0));ctxCost.lineTo(sx(x),sy(ymax));ctxCost.stroke();
+    ctxCost.fillText(x,sx(x)-6,sy(0)+24);
+  }
+  for(let i=0;i<=5;i++){
+    const y=ymax*i/5;
+    ctxCost.beginPath();ctxCost.moveTo(sx(0),sy(y));ctxCost.lineTo(sx(40),sy(y));ctxCost.stroke();
+    if(i>0)ctxCost.fillText(y.toFixed(0),sx(0)-48,sy(y)+4);
+  }
+
+  ctxCost.strokeStyle='#111827';ctxCost.lineWidth=2;
+  ctxCost.beginPath();ctxCost.moveTo(sx(0),sy(0));ctxCost.lineTo(sx(40),sy(0));ctxCost.stroke();
+  ctxCost.beginPath();ctxCost.moveTo(sx(0),sy(0));ctxCost.lineTo(sx(0),sy(ymax));ctxCost.stroke();
+
+  ctxCost.fillStyle='#14213d';ctxCost.font='bold 15px system-ui';
+  ctxCost.fillText('Producción Q',sx(20)-42,cvCost.height-20);
+  ctxCost.save();ctxCost.translate(20,sy(ymax/2)+40);ctxCost.rotate(-Math.PI/2);
+  ctxCost.fillText('Costo por unidad',0,0);ctxCost.restore();
+
+  return {sx,sy};
+}
+
+function drawCostCurve(fn,ax,color,width=4,dash=[]){
+  ctxCost.save();ctxCost.strokeStyle=color;ctxCost.lineWidth=width;ctxCost.setLineDash(dash);ctxCost.beginPath();
+  let started=false;
+  for(let q=.5;q<=40;q+=.1){
+    const y=fn(q);
+    if(!started){ctxCost.moveTo(ax.sx(q),ax.sy(y));started=true}
+    else ctxCost.lineTo(ax.sx(q),ax.sy(y));
+  }
+  ctxCost.stroke();ctxCost.restore();
+}
+
+function renderCost(){
+  const q=+costQ.value,w=+wage.value,cf=+fixedCost.value,k=+costK.value,a=+costA.value;
+  const cvv=variableCost(q),ct=totalCost(q),cmg=marginalCost(q),
+        cme=avgTotalCost(q),cvme=avgVariableCost(q),cfme=cf/q;
+
+  // Eje Y fijo para comparar desplazamientos sin reescalado automático
+  const ymax=80;
+  const ax=costAxes(ymax);
+
+  // Costo medio y marginal siempre visibles
+  drawCostCurve(avgTotalCost,ax,'#2563eb',4);
+  drawCostCurve(marginalCost,ax,'#dc2626',4);
+
+  if(costMode==='full'){
+    drawCostCurve(avgVariableCost,ax,'#16a34a',4);
+    drawCostCurve(x=>(+fixedCost.value)/x,ax,'#7c3aed',3,[7,6]);
+
+    $('costLegend').innerHTML=
+      '<span><span class="dot" style="background:#2563eb"></span>CMe</span>'+
+      '<span><span class="dot" style="background:#dc2626"></span>CMg</span>'+
+      '<span><span class="dot" style="background:#16a34a"></span>CVMe</span>'+
+      '<span><span class="dot" style="background:#7c3aed"></span>CFMe</span>';
+
+    $('costNote').innerHTML=
+      '<strong>Descomposición del costo medio.</strong> El costo medio total cumple <strong>CMe = CFMe + CVMe</strong>. '+
+      'El CFMe cae continuamente al repartirse el costo fijo entre más unidades, mientras que el CVMe refleja el costo variable por unidad. '+
+      'El CMg indica cuánto aumenta el costo al producir una unidad adicional.';
+  }else{
+    $('costLegend').innerHTML=
+      '<span><span class="dot" style="background:#2563eb"></span>CMe</span>'+
+      '<span><span class="dot" style="background:#dc2626"></span>CMg</span>';
+
+    $('costNote').innerHTML=
+      '<strong>Costo medio y costo marginal.</strong> El CMe muestra el costo por unidad producida y el CMg cuánto aumenta el costo al producir una unidad adicional. '+
+      'Esta vista deja solo las dos curvas centrales para estudiar con claridad su relación.';
+  }
+
+  // Punto actual sobre ambas curvas
+  [
+    [cme,'#2563eb'],
+    [cmg,'#dc2626']
+  ].forEach(([val,color])=>{
+    ctxCost.beginPath();ctxCost.fillStyle=color;
+    ctxCost.arc(ax.sx(q),ax.sy(val),7,0,Math.PI*2);ctxCost.fill();
+  });
+
+  // Línea vertical de referencia en Q
+  ctxCost.save();ctxCost.setLineDash([5,5]);ctxCost.strokeStyle='#98a2b3';ctxCost.lineWidth=1.4;
+  ctxCost.beginPath();ctxCost.moveTo(ax.sx(q),ax.sy(0));ctxCost.lineTo(ax.sx(q),ax.sy(ymax));ctxCost.stroke();
+  ctxCost.restore();
+
+  $('costQVal').textContent=q.toFixed(1).replace('.',',');
+  $('wVal').textContent=w.toFixed(0);
+  $('fcVal').textContent=cf.toFixed(0);
+  $('costKVal').textContent=k.toFixed(0);
+  $('costAVal').textContent=a.toFixed(1).replace('.',',');
+  $('cfOut').textContent=cf.toFixed(2).replace('.',',');
+  $('cvOut').textContent=cvv.toFixed(2).replace('.',',');
+  $('ctOut').textContent=ct.toFixed(2).replace('.',',');
+  $('cmgOut').textContent=cmg.toFixed(2).replace('.',',');
+  $('cmeOut').textContent=cme.toFixed(2).replace('.',',');
+  $('cvmeOut').textContent=cvme.toFixed(2).replace('.',',');
+
+  // Si existe KPI de CFMe, actualizarlo
+  if($('cfmeOut')) $('cfmeOut').textContent=cfme.toFixed(2).replace('.',',');
+}
+
+function setCostMode(m){
+  costMode=m;
+  $('costCleanBtn').classList.toggle('active',m==='clean');
+  $('costFullBtn').classList.toggle('active',m==='full');
+  renderCost();
+}
+$('costCleanBtn').onclick=()=>setCostMode('clean');
+$('costFullBtn').onclick=()=>setCostMode('full');
+$('costReset').onclick=()=>{
+  costQ.value=10;wage.value=10;fixedCost.value=20;costK.value=4;costA.value=3;
+  setCostMode('clean');
+};
+[costQ,wage,fixedCost,costK,costA].forEach(el=>el.oninput=renderCost);
+renderCost();
+
+// --- MÓDULO: MAXIMIZAR BENEFICIO ---
+const cvProfit=$('cvProfit'),ctxProfit=cvProfit.getContext('2d');
+const profitQ=$('profitQ');
+
+// Parámetros fijos para una demostración limpia
+const PROFIT_P=30;      // Precio = ingreso marginal
+const PROFIT_CF=80;     // Costo fijo
+const PROFIT_A=5;       // Intercepto del CMg
+const PROFIT_B=1.25;    // Pendiente del CMg
+
+function demoMC(q){ return PROFIT_A + PROFIT_B*q; }
+function demoTC(q){ return PROFIT_CF + PROFIT_A*q + 0.5*PROFIT_B*q*q; }
+function demoProfit(q){ return PROFIT_P*q - demoTC(q); }
+
+function profitAxes(){
+  const pad={l:76,r:76,t:30,b:68}, xmax=40, ymaxL=60;
+  const qStar=(PROFIT_P-PROFIT_A)/PROFIT_B;
+  let pmin=Infinity,pmax=-Infinity;
+  for(let q=0;q<=xmax;q+=.1){
+    const pi=demoProfit(q);
+    pmin=Math.min(pmin,pi);pmax=Math.max(pmax,pi);
+  }
+  // Dar aire vertical para que la curvatura del beneficio se vea claramente.
+  pmin=Math.floor((pmin-60)/50)*50;
+  pmax=Math.ceil((pmax+60)/50)*50;
+
+  const sx=x=>pad.l+x/xmax*(cvProfit.width-pad.l-pad.r);
+  const syL=y=>cvProfit.height-pad.b-y/ymaxL*(cvProfit.height-pad.t-pad.b);
+  const syR=y=>cvProfit.height-pad.b-(y-pmin)/(pmax-pmin)*(cvProfit.height-pad.t-pad.b);
+
+  ctxProfit.clearRect(0,0,cvProfit.width,cvProfit.height);
+  ctxProfit.fillStyle='#fff';ctxProfit.fillRect(0,0,cvProfit.width,cvProfit.height);
+  ctxProfit.strokeStyle='#e5e7eb';ctxProfit.lineWidth=1;
+  ctxProfit.fillStyle='#667085';ctxProfit.font='13px system-ui';
+
+  for(let x=0;x<=40;x+=5){
+    ctxProfit.beginPath();ctxProfit.moveTo(sx(x),syL(0));ctxProfit.lineTo(sx(x),syL(ymaxL));ctxProfit.stroke();
+    ctxProfit.fillText(x,sx(x)-6,syL(0)+24);
+  }
+  for(let i=0;i<=4;i++){
+    const yl=ymaxL*i/4;
+    const yr=pmin+(pmax-pmin)*i/4;
+    ctxProfit.beginPath();ctxProfit.moveTo(sx(0),syL(yl));ctxProfit.lineTo(sx(40),syL(yl));ctxProfit.stroke();
+    if(i>0) ctxProfit.fillText(yl.toFixed(0),sx(0)-42,syL(yl)+4);
+    ctxProfit.fillText(yr.toFixed(0),sx(40)+10,syR(yr)+4);
+  }
+
+  ctxProfit.strokeStyle='#111827';ctxProfit.lineWidth=2;
+  ctxProfit.beginPath();ctxProfit.moveTo(sx(0),syL(0));ctxProfit.lineTo(sx(40),syL(0));ctxProfit.stroke();
+  ctxProfit.beginPath();ctxProfit.moveTo(sx(0),syL(0));ctxProfit.lineTo(sx(0),syL(ymaxL));ctxProfit.stroke();
+  ctxProfit.beginPath();ctxProfit.moveTo(sx(40),syL(0));ctxProfit.lineTo(sx(40),syL(ymaxL));ctxProfit.stroke();
+
+  ctxProfit.fillStyle='#14213d';ctxProfit.font='bold 15px system-ui';
+  ctxProfit.fillText('Cantidad Q',sx(20)-36,cvProfit.height-20);
+  ctxProfit.save();ctxProfit.translate(20,syL(ymaxL/2)+58);ctxProfit.rotate(-Math.PI/2);ctxProfit.fillText('Precio / costo marginal',0,0);ctxProfit.restore();
+  ctxProfit.save();ctxProfit.translate(cvProfit.width-18,syL(ymaxL/2)+50);ctxProfit.rotate(Math.PI/2);ctxProfit.fillText('Beneficio total',0,0);ctxProfit.restore();
+
+  return {sx,syL,syR,ymaxL,pmin,pmax,qStar};
+}
+
+function renderProfit(){
+  const q=+profitQ.value;
+  const ax=profitAxes();
+
+  // Curva de costo marginal
+  ctxProfit.save();ctxProfit.strokeStyle='#dc2626';ctxProfit.lineWidth=4;ctxProfit.beginPath();
+  ctxProfit.moveTo(ax.sx(0),ax.syL(demoMC(0)));
+  for(let x=.1;x<=40;x+=.1) ctxProfit.lineTo(ax.sx(x),ax.syL(demoMC(x)));
+  ctxProfit.stroke();ctxProfit.restore();
+
+  // Precio = ingreso marginal
+  ctxProfit.save();ctxProfit.strokeStyle='#2563eb';ctxProfit.lineWidth=4;
+  ctxProfit.beginPath();ctxProfit.moveTo(ax.sx(0),ax.syL(PROFIT_P));ctxProfit.lineTo(ax.sx(40),ax.syL(PROFIT_P));ctxProfit.stroke();ctxProfit.restore();
+
+  // Beneficio total: parábola cóncava más visible
+  ctxProfit.save();ctxProfit.strokeStyle='#7c3aed';ctxProfit.lineWidth=4;ctxProfit.beginPath();
+  ctxProfit.moveTo(ax.sx(0),ax.syR(demoProfit(0)));
+  for(let x=.1;x<=40;x+=.1) ctxProfit.lineTo(ax.sx(x),ax.syR(demoProfit(x)));
+  ctxProfit.stroke();ctxProfit.restore();
+
+  // Óptimo teórico Q*
+  ctxProfit.save();ctxProfit.setLineDash([6,5]);ctxProfit.strokeStyle='#16a34a';ctxProfit.lineWidth=2;
+  ctxProfit.beginPath();ctxProfit.moveTo(ax.sx(ax.qStar),ax.syL(0));ctxProfit.lineTo(ax.sx(ax.qStar),ax.syL(PROFIT_P));ctxProfit.stroke();ctxProfit.restore();
+  ctxProfit.beginPath();ctxProfit.fillStyle='#16a34a';ctxProfit.arc(ax.sx(ax.qStar),ax.syL(PROFIT_P),8,0,Math.PI*2);ctxProfit.fill();
+
+  // Cantidad elegida por el usuario
+  ctxProfit.save();ctxProfit.setLineDash([4,4]);ctxProfit.strokeStyle='#667085';ctxProfit.lineWidth=1.5;
+  ctxProfit.beginPath();ctxProfit.moveTo(ax.sx(q),ax.syL(0));ctxProfit.lineTo(ax.sx(q),ax.syL(Math.min(ax.ymaxL,demoMC(q))));ctxProfit.stroke();ctxProfit.restore();
+
+  ctxProfit.beginPath();ctxProfit.fillStyle='#111827';ctxProfit.arc(ax.sx(q),ax.syL(demoMC(q)),6,0,Math.PI*2);ctxProfit.fill();
+  ctxProfit.beginPath();ctxProfit.fillStyle='#7c3aed';ctxProfit.arc(ax.sx(q),ax.syR(demoProfit(q)),7,0,Math.PI*2);ctxProfit.fill();
+
+  // Punto máximo sobre beneficio
+  ctxProfit.beginPath();ctxProfit.fillStyle='#16a34a';ctxProfit.arc(ax.sx(ax.qStar),ax.syR(demoProfit(ax.qStar)),8,0,Math.PI*2);ctxProfit.fill();
+
+  $('profitQVal').textContent=q.toFixed(0);
+  $('profitPriceOut').textContent=PROFIT_P.toFixed(0);
+  $('profitMCOut').textContent=demoMC(q).toFixed(1).replace('.',',');
+  $('profitPiOut').textContent=demoProfit(q).toFixed(1).replace('.',',');
+  $('profitQStar').textContent=ax.qStar.toFixed(0);
+
+  let msg;
+  if(q<ax.qStar-0.5) msg='En esta cantidad, <strong>P &gt; CMg</strong>: producir una unidad adicional todavía aumenta el beneficio.';
+  else if(q>ax.qStar+0.5) msg='En esta cantidad, <strong>P &lt; CMg</strong>: estás produciendo más allá del nivel que maximiza el beneficio.';
+  else msg='Aquí se cumple aproximadamente <strong>P = CMg</strong>: el beneficio total alcanza su máximo.';
+
+  $('profitNote').innerHTML=
+    '<strong>Maximización de beneficios.</strong> '+msg+
+    ' La curva morada muestra <strong>π(Q)=IT(Q)−CT(Q)</strong> en el eje derecho y está dibujada de forma más pronunciadamente cóncava para hacer visible su máximo.';
+}
+
+$('profitReset').onclick=()=>{ profitQ.value=10; renderProfit(); };
+profitQ.oninput=renderProfit;
+renderProfit();
+
+
+// --- NAVEGACIÓN: EMPRESA ---
+function showCompanyModule(which){
+  [1,2,3,4,5,6].forEach(i=>{
+    $('tab'+i).classList.remove('active');
+    $('mod'+i).classList.remove('active');
+  });
+  $('modProd').classList.toggle('active',which==='prod');
+  $('modCost').classList.toggle('active',which==='cost');
+  $('modProfit').classList.toggle('active',which==='profit');
+  $('tabProd').classList.toggle('active',which==='prod');
+  $('tabCost').classList.toggle('active',which==='cost');
+  $('tabProfit').classList.toggle('active',which==='profit');
+  if(which==='prod') render();
+  if(which==='cost') renderCost();
+  if(which==='profit') renderProfit();
+}
+$('tabProd').onclick=()=>showCompanyModule('prod');
+$('tabCost').onclick=()=>showCompanyModule('cost');
+$('tabProfit').onclick=()=>showCompanyModule('profit');
 
 </script>
 </body>
