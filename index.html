@@ -58,10 +58,11 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     <button id="tab4">Demanda: estática comparativa</button>
     <button id="tabProd">Función de producción</button>
     <button id="tabCost">Costos</button>
-    <button id="tabProfit">Maximizar beneficio</button>
+    <button id="tabProfit">Problema de la firma: Maximizar beneficio</button>
+    <button id="tabSupply">Oferta: estática comparativa</button>
     <button id="tabMarket">Oferta y demanda</button>
-    <button id="tabComparative">Estática comparativa</button>
-    <button id="tabInelastic">Demanda perfectamente inelástica</button>
+    <button id="tabComparative">Estática comparativa: oferta y demanda</button>
+    <button id="tabInelastic">Estática comparativa con demanda 100% inelástica</button>
   </div>
 
   <!-- MÓDULO 1 -->
@@ -455,6 +456,46 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
   </section>
 
 
+
+  <!-- MÓDULO OFERTA: ESTÁTICA COMPARATIVA -->
+  <section id="modSupply" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="supplyReset">Reiniciar</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <canvas id="cvSupply" width="800" height="600"></canvas>
+          <div class="legend">
+            <span><span class="dot" style="background:#98a2b3"></span>Oferta inicial</span>
+            <span><span class="dot" style="background:#dc2626"></span>Oferta nueva</span>
+            <span><span class="dot" style="background:#111827"></span>Precio seleccionado</span>
+          </div>
+          <div id="supplyNote" class="note"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Oferta: estática comparativa</h3>
+          <p>Puedes distinguir entre un <strong>movimiento sobre la curva de oferta</strong> causado por un cambio en el precio y un <strong>desplazamiento de la curva</strong> causado por otros determinantes.</p>
+
+          <label>Precio P: <span id="supplyPriceVal" class="value">5,0</span></label>
+          <input id="supplyPrice" type="range" min="1" max="9" step="0.1" value="5">
+
+          <label>Cambio en la oferta (+ aumenta / − disminuye): <span id="supplyShiftVal" class="value">0,0</span></label>
+          <input id="supplyShift" type="range" min="-3" max="3" step="0.2" value="0">
+
+          <div class="kpis">
+            <div class="kpi"><span>Cantidad sobre oferta inicial Q₀</span><b id="supplyQ0">0,0</b></div>
+            <div class="kpi"><span>Cantidad sobre oferta nueva Q₁</span><b id="supplyQ1">0,0</b></div>
+            <div class="kpi"><span>Precio seleccionado</span><b id="supplyPOut">0,0</b></div>
+            <div class="kpi"><span>Tipo de cambio</span><b id="supplyType">Movimiento sobre la curva</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- MÓDULO OFERTA Y DEMANDA -->
   <section id="modMarket" class="module">
     <div class="card">
@@ -580,7 +621,7 @@ function switchTab(n){
     $('tab'+i).classList.toggle('active',i===n);
     $('mod'+i).classList.toggle('active',i===n);
   });
-  ['Prod','Cost','Profit','Market','Comparative','Inelastic'].forEach(k=>{
+  ['Prod','Cost','Profit','Supply','Market','Comparative','Inelastic'].forEach(k=>{
     $('tab'+k).classList.remove('active');
     $('mod'+k).classList.remove('active');
   });
@@ -1972,6 +2013,151 @@ $('inelasticReset').onclick=()=>{inelasticSShift.value=0;renderInelastic();};
 inelasticSShift.oninput=renderInelastic;
 renderInelastic();
 
+
+// --- MÓDULO: OFERTA - ESTÁTICA COMPARATIVA ---
+const cvSupply=$('cvSupply'),ctxSupply=cvSupply.getContext('2d');
+const supplyPrice=$('supplyPrice'), supplyShift=$('supplyShift');
+
+// Oferta inicial: P = 0.8Q. Parte en el origen y su pendiente no es 1.
+const SO_A=0, SO_B=.8;
+
+function supplyQ(P, shift){
+  // Convención: +shift = aumento de oferta = curva a la derecha/abajo.
+  const intercept=SO_A-shift;
+  return Math.max(0,(P-intercept)/SO_B);
+}
+
+function renderSupply(){
+  const P=+supplyPrice.value;
+  const sh=+supplyShift.value;
+  const q0=supplyQ(P,0);
+  const q1=supplyQ(P,sh);
+
+  const pad={l:72,r:28,t:30,b:64}, xmax=11, ymax=10;
+  const sx=x=>pad.l+x/xmax*(cvSupply.width-pad.l-pad.r);
+  const sy=y=>cvSupply.height-pad.b-y/ymax*(cvSupply.height-pad.t-pad.b);
+
+  ctxSupply.clearRect(0,0,cvSupply.width,cvSupply.height);
+  ctxSupply.fillStyle='#fff';ctxSupply.fillRect(0,0,cvSupply.width,cvSupply.height);
+
+  // Grilla
+  ctxSupply.strokeStyle='#e5e7eb';ctxSupply.lineWidth=1;
+  ctxSupply.fillStyle='#667085';ctxSupply.font='13px system-ui';
+  for(let x=0;x<=10;x+=2){
+    ctxSupply.beginPath();ctxSupply.moveTo(sx(x),sy(0));ctxSupply.lineTo(sx(x),sy(ymax));ctxSupply.stroke();
+    ctxSupply.fillText(x,sx(x)-5,sy(0)+23);
+  }
+  for(let y=0;y<=10;y+=2){
+    ctxSupply.beginPath();ctxSupply.moveTo(sx(0),sy(y));ctxSupply.lineTo(sx(xmax),sy(y));ctxSupply.stroke();
+    if(y>0) ctxSupply.fillText(y,sx(0)-30,sy(y)+4);
+  }
+
+  // Ejes
+  ctxSupply.strokeStyle='#111827';ctxSupply.lineWidth=2;
+  ctxSupply.beginPath();ctxSupply.moveTo(sx(0),sy(0));ctxSupply.lineTo(sx(xmax),sy(0));ctxSupply.stroke();
+  ctxSupply.beginPath();ctxSupply.moveTo(sx(0),sy(0));ctxSupply.lineTo(sx(0),sy(ymax));ctxSupply.stroke();
+
+  ctxSupply.fillStyle='#14213d';ctxSupply.font='bold 15px system-ui';
+  ctxSupply.fillText('Cantidad Q',sx(5.5)-36,cvSupply.height-19);
+  ctxSupply.save();ctxSupply.translate(20,sy(5)+25);ctxSupply.rotate(-Math.PI/2);ctxSupply.fillText('Precio P',0,0);ctxSupply.restore();
+
+  // Oferta inicial
+  ctxSupply.save();
+  ctxSupply.strokeStyle='#98a2b3';ctxSupply.lineWidth=3;ctxSupply.setLineDash([7,6]);
+  ctxSupply.beginPath();
+  ctxSupply.moveTo(sx(0),sy(SO_A));
+  ctxSupply.lineTo(sx((ymax-SO_A)/SO_B),sy(ymax));
+  ctxSupply.stroke();
+  ctxSupply.restore();
+
+  // Nueva oferta
+  const newIntercept=SO_A-sh;
+  ctxSupply.strokeStyle='#dc2626';ctxSupply.lineWidth=4;
+  ctxSupply.beginPath();
+  ctxSupply.moveTo(sx(0),sy(newIntercept));
+  ctxSupply.lineTo(sx((ymax-newIntercept)/SO_B),sy(ymax));
+  ctxSupply.stroke();
+
+  // Precio seleccionado: guía horizontal continua desde el eje Y
+  // hasta la intersección más alejada. Así no desaparece el tramo
+  // entre la oferta original y la desplazada cuando la oferta disminuye.
+  const qGuideEnd = Math.max(q0,q1);
+  ctxSupply.strokeStyle='#111827';ctxSupply.lineWidth=2.5;
+  ctxSupply.beginPath();
+  ctxSupply.moveTo(sx(0),sy(P));
+  ctxSupply.lineTo(sx(qGuideEnd),sy(P));
+  ctxSupply.stroke();
+
+  // Guías verticales hacia el eje X para mostrar las cantidades ofrecidas
+  ctxSupply.save();
+  ctxSupply.setLineDash([5,5]);
+  ctxSupply.lineWidth=1.8;
+
+  ctxSupply.strokeStyle='#98a2b3';
+  ctxSupply.beginPath();
+  ctxSupply.moveTo(sx(q0),sy(P));
+  ctxSupply.lineTo(sx(q0),sy(0));
+  ctxSupply.stroke();
+
+  ctxSupply.strokeStyle='#dc2626';
+  ctxSupply.beginPath();
+  ctxSupply.moveTo(sx(q1),sy(P));
+  ctxSupply.lineTo(sx(q1),sy(0));
+  ctxSupply.stroke();
+  ctxSupply.restore();
+
+  // Etiquetas de cantidad sobre el eje X
+  ctxSupply.fillStyle='#667085';ctxSupply.font='bold 13px system-ui';
+  ctxSupply.fillText('Q₀',sx(q0)-9,sy(0)+42);
+  if(Math.abs(q1-q0)>.05){
+    ctxSupply.fillStyle='#b42318';
+    ctxSupply.fillText('Q₁',sx(q1)-9,sy(0)+42);
+  }
+
+  // Puntos sobre ambas curvas al mismo precio
+  ctxSupply.beginPath();ctxSupply.fillStyle='#98a2b3';ctxSupply.arc(sx(q0),sy(P),7,0,Math.PI*2);ctxSupply.fill();
+  ctxSupply.beginPath();ctxSupply.fillStyle='#dc2626';ctxSupply.arc(sx(q1),sy(P),7,0,Math.PI*2);ctxSupply.fill();
+
+  // Flecha aproximada para mostrar desplazamiento horizontal de oferta a ese precio
+  if(Math.abs(sh)>.01){
+    const xA=sx(q0), xB=sx(q1), y=sy(P)+24;
+    ctxSupply.strokeStyle=sh>0?'#16a34a':'#7c3aed';
+    ctxSupply.lineWidth=3;
+    ctxSupply.beginPath();ctxSupply.moveTo(xA,y);ctxSupply.lineTo(xB,y);ctxSupply.stroke();
+    const dir=xB>xA?1:-1;
+    ctxSupply.beginPath();
+    ctxSupply.moveTo(xB,y);
+    ctxSupply.lineTo(xB-10*dir,y-6);
+    ctxSupply.lineTo(xB-10*dir,y+6);
+    ctxSupply.closePath();ctxSupply.fillStyle=sh>0?'#16a34a':'#7c3aed';ctxSupply.fill();
+  }
+
+  $('supplyPriceVal').textContent=P.toFixed(1).replace('.',',');
+  $('supplyShiftVal').textContent=(sh>0?'+':'')+sh.toFixed(1).replace('.',',');
+  $('supplyQ0').textContent=q0.toFixed(1).replace('.',',');
+  $('supplyQ1').textContent=q1.toFixed(1).replace('.',',');
+  $('supplyPOut').textContent=P.toFixed(1).replace('.',',');
+
+  let typeText, note;
+  if(Math.abs(sh)<.01){
+    typeText='Movimiento sobre la curva';
+    note='<strong>Movimiento sobre la curva de oferta.</strong> Al variar solamente el precio, cambia la cantidad ofrecida <strong>sin mover la curva</strong>. Un precio mayor lleva a una mayor cantidad ofrecida; un precio menor, a una menor cantidad ofrecida.';
+  } else if(sh>0){
+    typeText='Aumento de la oferta';
+    note='<strong>Desplazamiento de la oferta.</strong> Un aumento de la oferta desplaza la curva <strong>a la derecha/abajo</strong>. A un mismo precio, la cantidad ofrecida es mayor. El control de precio sigue permitiendo observar movimientos sobre la nueva curva.';
+  } else {
+    typeText='Disminución de la oferta';
+    note='<strong>Desplazamiento de la oferta.</strong> Una disminución de la oferta desplaza la curva <strong>a la izquierda/arriba</strong>. A un mismo precio, la cantidad ofrecida es menor. El control de precio sigue permitiendo observar movimientos sobre la nueva curva.';
+  }
+
+  $('supplyType').textContent=typeText;
+  $('supplyNote').innerHTML=note;
+}
+
+$('supplyReset').onclick=()=>{supplyPrice.value=5;supplyShift.value=0;renderSupply();};
+[supplyPrice,supplyShift].forEach(el=>el.oninput=renderSupply);
+renderSupply();
+
 // --- NAVEGACIÓN: EMPRESA ---
 function showCompanyModule(which){
   [1,2,3,4,5,6].forEach(i=>{
@@ -1981,6 +2167,7 @@ function showCompanyModule(which){
   $('modProd').classList.toggle('active',which==='prod');
   $('modCost').classList.toggle('active',which==='cost');
   $('modProfit').classList.toggle('active',which==='profit');
+  $('modSupply').classList.toggle('active',which==='supply');
   $('modMarket').classList.toggle('active',which==='market');
   $('modComparative').classList.toggle('active',which==='comparative');
   $('modInelastic').classList.toggle('active',which==='inelastic');
@@ -1988,6 +2175,7 @@ function showCompanyModule(which){
   $('tabProd').classList.toggle('active',which==='prod');
   $('tabCost').classList.toggle('active',which==='cost');
   $('tabProfit').classList.toggle('active',which==='profit');
+  $('tabSupply').classList.toggle('active',which==='supply');
   $('tabMarket').classList.toggle('active',which==='market');
   $('tabComparative').classList.toggle('active',which==='comparative');
   $('tabInelastic').classList.toggle('active',which==='inelastic');
@@ -1995,6 +2183,7 @@ function showCompanyModule(which){
   if(which==='prod') render();
   if(which==='cost') renderCost();
   if(which==='profit') renderProfit();
+  if(which==='supply') renderSupply();
   if(which==='market') renderMarket();
   if(which==='comparative') renderComparative();
   if(which==='inelastic') renderInelastic();
@@ -2002,6 +2191,7 @@ function showCompanyModule(which){
 $('tabProd').onclick=()=>showCompanyModule('prod');
 $('tabCost').onclick=()=>showCompanyModule('cost');
 $('tabProfit').onclick=()=>showCompanyModule('profit');
+$('tabSupply').onclick=()=>showCompanyModule('supply');
 $('tabMarket').onclick=()=>showCompanyModule('market');
 $('tabComparative').onclick=()=>showCompanyModule('comparative');
 $('tabInelastic').onclick=()=>showCompanyModule('inelastic');
