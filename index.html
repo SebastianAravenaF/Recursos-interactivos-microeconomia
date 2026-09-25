@@ -63,6 +63,9 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     <button id="tabMarket">Oferta y demanda</button>
     <button id="tabComparative">Estática comparativa: oferta y demanda</button>
     <button id="tabInelastic">Estática comparativa con demanda 100% inelástica</button>
+    <button id="tabSurplus">Excedentes</button>
+    <button id="tabEfficiency">Excedente y eficiencia</button>
+    <button id="tabTax">Impuestos e incidencia</button>
   </div>
 
   <!-- MÓDULO 1 -->
@@ -609,6 +612,121 @@ select{padding:9px;border:1px solid #cfd6e4;border-radius:9px;background:white}
     </div>
   </section>
 
+
+  <section id="modSurplus" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="surplusConsumerBtn" class="active">1. Excedente del consumidor</button>
+        <button id="surplusProducerBtn">2. Excedente del productor</button>
+        <button id="surplusTotalBtn">3. Excedente total</button>
+        <button id="surplusReset">Reiniciar</button>
+      </div>
+      <div class="row">
+        <div>
+          <canvas id="cvSurplus" width="800" height="600"></canvas>
+          <div class="legend" id="surplusLegend"></div>
+          <div id="surplusNote" class="note"></div>
+        </div>
+        <div class="panel">
+          <h3>Excedentes y bienestar</h3>
+          <div id="surplusPriceControls">
+            <p>Mueve el <strong>precio</strong> y observa cómo cambia el área triangular del excedente.</p>
+            <label>Precio P: <span id="surplusPriceVal" class="value">5,0</span></label>
+            <input id="surplusPrice" type="range" min="0" max="10" step="1" value="5">
+          </div>
+          <div id="surplusEqMessage" style="display:none">
+            <p>Oferta y demanda determinan automáticamente el equilibrio competitivo.</p>
+          </div>
+          <div class="kpis">
+            <div class="kpi"><span>Cantidad Q</span><b id="surplusQ">0,0</b></div>
+            <div class="kpi"><span>Precio</span><b id="surplusP">0,0</b></div>
+            <div class="kpi"><span>Excedente consumidor EC</span><b id="surplusCS">—</b></div>
+            <div class="kpi"><span>Excedente productor EP</span><b id="surplusPS">—</b></div>
+            <div class="kpi"><span>Excedente total ET</span><b id="surplusTS">—</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- MÓDULO EXCEDENTE Y EFICIENCIA -->
+  <section id="modEfficiency" class="module">
+    <div class="card">
+      <div class="toolbar">
+        <button id="effReset">Volver al equilibrio</button>
+      </div>
+      <div class="row">
+        <div>
+          <canvas id="cvEfficiency" width="800" height="600"></canvas>
+          <div class="legend">
+            <span><span class="dot" style="background:#93c5fd"></span>Excedente consumidor</span>
+            <span><span class="dot" style="background:#86efac"></span>Excedente productor</span>
+            <span><span class="dot" style="background:#fbbf24"></span>Pérdida de excedente</span>
+          </div>
+          <div id="effNote" class="note"></div>
+        </div>
+        <div class="panel">
+          <h3>Precio distinto del equilibrio y pérdida de excedente</h3>
+          <p>Mueve el <strong>precio de mercado</strong>. Si se aleja de P*=5, la cantidad efectivamente transada queda determinada por el <strong>lado corto del mercado</strong>: la menor entre Qd y Qo.</p>
+
+          <label>Precio P: <span id="effPVal" class="value">5</span></label>
+          <input id="effP" type="range" min="0" max="10" step="1" value="5">
+
+          <div class="kpis">
+            <div class="kpi"><span>Cantidad demandada Qd</span><b id="effQd">5</b></div>
+            <div class="kpi"><span>Cantidad ofrecida Qo</span><b id="effQs">5</b></div>
+            <div class="kpi"><span>Cantidad transada Q</span><b id="effQt">5</b></div>
+            <div class="kpi"><span>Excedente consumidor EC</span><b id="effCS">12,5</b></div>
+            <div class="kpi"><span>Excedente productor EP</span><b id="effPS">12,5</b></div>
+            <div class="kpi"><span>Excedente total</span><b id="effTS">25,0</b></div>
+            <div class="kpi"><span>Pérdida de excedente</span><b id="effLoss">0,0</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="modTax" class="module">
+    <div class="card">
+      <div class="toolbar"><button id="taxReset">Reiniciar</button></div>
+      <div class="row">
+        <div>
+          <canvas id="cvTax" width="800" height="600"></canvas>
+          <div class="legend">
+            <span><span class="dot" style="background:#2563eb"></span>Demanda</span>
+            <span><span class="dot" style="background:#dc2626"></span>Oferta</span>
+            <span><span class="dot" style="background:#7c3aed"></span>Impuesto soportado por consumidores</span>
+            <span><span class="dot" style="background:#14b8a6"></span>Impuesto soportado por productores</span>
+            <span><span class="dot" style="background:#fbbf24"></span>Pérdida social</span>
+          </div>
+          <div id="taxNote" class="note"></div>
+        </div>
+        <div class="panel">
+          <h3>Impuesto e incidencia tributaria</h3>
+          <p>El impuesto abre una brecha entre el precio que paga el consumidor y el que recibe el productor. Cambia las elasticidades para ver <strong>quién soporta una mayor parte del impuesto</strong>.</p>
+          <label>Impuesto por unidad t: <span id="taxTVal" class="value">2,0</span></label>
+          <input id="taxT" type="range" min="0" max="4" step="0.5" value="2">
+          <label>Elasticidad de la demanda: <span id="taxDVal" class="value">Intermedia</span></label>
+          <input id="taxD" type="range" min="0" max="6" step="1" value="3">
+          <label>Elasticidad de la oferta: <span id="taxSVal" class="value">Intermedia</span></label>
+          <input id="taxS" type="range" min="0" max="6" step="1" value="3">
+          <div class="kpis">
+            <div class="kpi"><span>Precio inicial P*</span><b id="taxP0">5,0</b></div>
+            <div class="kpi"><span>Precio consumidor Pc</span><b id="taxPc">—</b></div>
+            <div class="kpi"><span>Precio productor Pp</span><b id="taxPp">—</b></div>
+            <div class="kpi"><span>Cantidad inicial Q*</span><b id="taxQ0">5,0</b></div>
+            <div class="kpi"><span>Cantidad con impuesto Qt</span><b id="taxQt">—</b></div>
+            <div class="kpi"><span>Incidencia consumidores</span><b id="taxConsumerShare">—</b></div>
+            <div class="kpi"><span>Incidencia productores</span><b id="taxProducerShare">—</b></div>
+            <div class="kpi"><span>Recaudación</span><b id="taxRevenue">—</b></div>
+            <div class="kpi"><span>Pérdida social</span><b id="taxDWL">—</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 <script>
@@ -621,7 +739,7 @@ function switchTab(n){
     $('tab'+i).classList.toggle('active',i===n);
     $('mod'+i).classList.toggle('active',i===n);
   });
-  ['Prod','Cost','Profit','Supply','Market','Comparative','Inelastic'].forEach(k=>{
+  ['Prod','Cost','Profit','Supply','Market','Comparative','Inelastic','Surplus','Efficiency','Tax'].forEach(k=>{
     $('tab'+k).classList.remove('active');
     $('mod'+k).classList.remove('active');
   });
@@ -2158,6 +2276,415 @@ $('supplyReset').onclick=()=>{supplyPrice.value=5;supplyShift.value=0;renderSupp
 [supplyPrice,supplyShift].forEach(el=>el.oninput=renderSupply);
 renderSupply();
 
+
+// --- MÓDULO: EXCEDENTES ---
+const cvSurplus=$('cvSurplus'),ctxSurplus=cvSurplus.getContext('2d');
+const surplusPrice=$('surplusPrice');
+let surplusMode='consumer';
+
+// D: P = 10-Q; S: P = Q.
+// Precio inicial de referencia P0=5, Q0=5.
+const SUR_DINT=10, SUR_SINT=0, SUR_P0=5, SUR_Q0=5;
+
+function setSurplusMode(mode){
+  surplusMode=mode;
+  $('surplusConsumerBtn').classList.toggle('active',mode==='consumer');
+  $('surplusProducerBtn').classList.toggle('active',mode==='producer');
+  $('surplusTotalBtn').classList.toggle('active',mode==='total');
+  $('surplusPriceControls').style.display=mode==='total'?'none':'block';
+  $('surplusEqMessage').style.display=mode==='total'?'block':'none';
+  renderSurplus();
+}
+
+function surPoly(points,fill){
+  ctxSurplus.fillStyle=fill;
+  ctxSurplus.beginPath();
+  points.forEach((p,i)=>i?ctxSurplus.lineTo(p[0],p[1]):ctxSurplus.moveTo(p[0],p[1]));
+  ctxSurplus.closePath();ctxSurplus.fill();
+}
+
+function renderSurplus(){
+  const pad={l:72,r:28,t:30,b:64}, xmax=11, ymax=11;
+  const sx=x=>pad.l+x/xmax*(cvSurplus.width-pad.l-pad.r);
+  const sy=y=>cvSurplus.height-pad.b-y/ymax*(cvSurplus.height-pad.t-pad.b);
+
+  ctxSurplus.clearRect(0,0,cvSurplus.width,cvSurplus.height);
+  ctxSurplus.fillStyle='#fff';ctxSurplus.fillRect(0,0,cvSurplus.width,cvSurplus.height);
+
+  ctxSurplus.strokeStyle='#e5e7eb';ctxSurplus.lineWidth=1;
+  ctxSurplus.fillStyle='#667085';ctxSurplus.font='13px system-ui';
+  for(let x=0;x<=10;x+=2){
+    ctxSurplus.beginPath();ctxSurplus.moveTo(sx(x),sy(0));ctxSurplus.lineTo(sx(x),sy(10));ctxSurplus.stroke();
+    ctxSurplus.fillText(x,sx(x)-5,sy(0)+23);
+  }
+  for(let y=0;y<=10;y+=2){
+    ctxSurplus.beginPath();ctxSurplus.moveTo(sx(0),sy(y));ctxSurplus.lineTo(sx(10),sy(y));ctxSurplus.stroke();
+    if(y>0)ctxSurplus.fillText(y,sx(0)-30,sy(y)+4);
+  }
+
+  ctxSurplus.strokeStyle='#111827';ctxSurplus.lineWidth=2;
+  ctxSurplus.beginPath();ctxSurplus.moveTo(sx(0),sy(0));ctxSurplus.lineTo(sx(10.5),sy(0));ctxSurplus.stroke();
+  ctxSurplus.beginPath();ctxSurplus.moveTo(sx(0),sy(0));ctxSurplus.lineTo(sx(0),sy(10.5));ctxSurplus.stroke();
+  ctxSurplus.fillStyle='#14213d';ctxSurplus.font='bold 15px system-ui';
+  ctxSurplus.fillText('Cantidad Q',sx(5.5)-36,cvSurplus.height-19);
+  ctxSurplus.save();ctxSurplus.translate(20,sy(5)+25);ctxSurplus.rotate(-Math.PI/2);ctxSurplus.fillText('Precio P',0,0);ctxSurplus.restore();
+
+  let P,Q,CS=null,PS=null,TS=null;
+  const P0=SUR_P0,Q0=SUR_Q0;
+  const CS0=.5*(10-P0)*Q0, PS0=.5*P0*Q0;
+
+  if(surplusMode==='consumer'){
+    P=+surplusPrice.value; Q=10-P; CS=.5*(10-P)*Q;
+
+    // Excedente inicial siempre visible.
+    surPoly([[sx(0),sy(10)],[sx(0),sy(P0)],[sx(Q0),sy(P0)]],'rgba(37,99,235,.22)');
+
+    if(P<P0){
+      // Consumidores que ya estaban: ganancia por pagar menor precio.
+      surPoly([[sx(0),sy(P0)],[sx(0),sy(P)],[sx(Q0),sy(P)],[sx(Q0),sy(P0)]],'rgba(245,158,11,.34)');
+      // Nuevos consumidores que entran.
+      surPoly([[sx(Q0),sy(P0)],[sx(Q0),sy(P)],[sx(Q),sy(P)]],'rgba(16,185,129,.38)');
+    }else if(P>P0){
+      // Consumidores que permanecen: pérdida por mayor precio.
+      surPoly([[sx(0),sy(P0)],[sx(0),sy(P)],[sx(Q),sy(P)],[sx(Q),sy(P0)]],'rgba(239,68,68,.30)');
+      // Consumidores que salen: excedente inicial perdido.
+      surPoly([[sx(Q),sy(P)],[sx(Q),sy(P0)],[sx(Q0),sy(P0)]],'rgba(168,85,247,.34)');
+    }
+
+    ctxSurplus.strokeStyle='#2563eb';ctxSurplus.lineWidth=4;
+    ctxSurplus.beginPath();ctxSurplus.moveTo(sx(0),sy(10));ctxSurplus.lineTo(sx(10),sy(0));ctxSurplus.stroke();
+
+    $('surplusLegend').innerHTML=
+      '<span><span class="dot" style="background:#93c5fd"></span>EC inicial</span>'+
+      (P<P0?'<span><span class="dot" style="background:#f59e0b"></span>Ganancia consumidores que se mantienen</span><span><span class="dot" style="background:#10b981"></span>Nuevos consumidores</span>':
+       P>P0?'<span><span class="dot" style="background:#ef4444"></span>Pérdida consumidores que se mantienen</span><span><span class="dot" style="background:#a855f7"></span>Consumidores que salen</span>':'');
+    $('surplusNote').innerHTML=P<P0
+      ?'<strong>Aumenta el excedente del consumidor.</strong> El área azul es el EC inicial. El rectángulo muestra la ganancia de quienes ya compraban y ahora pagan menos; el triángulo adicional corresponde a <strong>nuevos consumidores que entran</strong>.'
+      :P>P0
+      ?'<strong>Disminuye el excedente del consumidor.</strong> Parte de la pérdida corresponde a consumidores que siguen comprando pero pagan más; otra parte corresponde a <strong>consumidores que salen del mercado</strong>.'
+      :'<strong>Situación inicial.</strong> P₀ = 5, Q₀ = 5 y EC₀ = 12,5. Mueve el precio para descomponer el cambio en excedente.';
+
+  }else if(surplusMode==='producer'){
+    P=+surplusPrice.value; Q=P; PS=.5*P*Q;
+
+    // Excedente inicial.
+    surPoly([[sx(0),sy(0)],[sx(0),sy(P0)],[sx(Q0),sy(P0)]],'rgba(134,239,172,.38)');
+
+    if(P>P0){
+      // Productores que ya estaban: ganancia por mayor precio.
+      surPoly([[sx(0),sy(P0)],[sx(0),sy(P)],[sx(Q0),sy(P)],[sx(Q0),sy(P0)]],'rgba(21,128,61,.48)');
+      // Nuevos productores/unidades que entran.
+      surPoly([[sx(Q0),sy(P0)],[sx(Q0),sy(P)],[sx(Q),sy(P)]],'rgba(52,211,153,.58)');
+    }else if(P<P0){
+      // Productores que permanecen: pérdida por menor precio.
+      surPoly([[sx(0),sy(P)],[sx(0),sy(P0)],[sx(Q),sy(P0)],[sx(Q),sy(P)]],'rgba(239,68,68,.30)');
+      // Productores/unidades que salen.
+      surPoly([[sx(Q),sy(P)],[sx(Q),sy(P0)],[sx(Q0),sy(P0)]],'rgba(168,85,247,.34)');
+    }
+
+    ctxSurplus.strokeStyle='#dc2626';ctxSurplus.lineWidth=4;
+    ctxSurplus.beginPath();ctxSurplus.moveTo(sx(0),sy(0));ctxSurplus.lineTo(sx(10),sy(10));ctxSurplus.stroke();
+
+    $('surplusLegend').innerHTML=
+      '<span><span class="dot" style="background:#86efac"></span>EP inicial</span>'+
+      (P>P0?'<span><span class="dot" style="background:#15803d"></span>Ganancia productores que se mantienen</span><span><span class="dot" style="background:#34d399"></span>Nuevos productores/unidades</span>':
+       P<P0?'<span><span class="dot" style="background:#ef4444"></span>Pérdida productores que se mantienen</span><span><span class="dot" style="background:#a855f7"></span>Productores/unidades que salen</span>':'');
+    $('surplusNote').innerHTML=P>P0
+      ?'<strong>Aumenta el excedente del productor.</strong> El área verde es el EP inicial. El rectángulo muestra la ganancia de quienes ya producían y ahora reciben un precio mayor; el triángulo adicional corresponde a <strong>nuevos productores o nuevas unidades que entran</strong>.'
+      :P<P0
+      ?'<strong>Disminuye el excedente del productor.</strong> Parte de la pérdida corresponde a quienes siguen produciendo pero reciben un precio menor; otra parte corresponde a <strong>productores o unidades que salen</strong>.'
+      :'<strong>Situación inicial.</strong> P₀ = 5, Q₀ = 5 y EP₀ = 12,5. Mueve el precio para descomponer el cambio en excedente.';
+
+  }else{
+    P=5;Q=5;CS=12.5;PS=12.5;TS=25;
+    surPoly([[sx(0),sy(10)],[sx(0),sy(5)],[sx(5),sy(5)]],'rgba(37,99,235,.25)');
+    surPoly([[sx(0),sy(0)],[sx(0),sy(5)],[sx(5),sy(5)]],'rgba(22,163,74,.25)');
+
+    ctxSurplus.strokeStyle='#2563eb';ctxSurplus.lineWidth=4;
+    ctxSurplus.beginPath();ctxSurplus.moveTo(sx(0),sy(10));ctxSurplus.lineTo(sx(10),sy(0));ctxSurplus.stroke();
+    ctxSurplus.strokeStyle='#dc2626';
+    ctxSurplus.beginPath();ctxSurplus.moveTo(sx(0),sy(0));ctxSurplus.lineTo(sx(10),sy(10));ctxSurplus.stroke();
+
+    $('surplusLegend').innerHTML='<span><span class="dot" style="background:#93c5fd"></span>EC = 12,5</span><span><span class="dot" style="background:#86efac"></span>EP = 12,5</span>';
+    $('surplusNote').innerHTML='<strong>Excedente total.</strong> En el equilibrio competitivo, EC = 12,5 y EP = 12,5, por lo que <strong>ET = EC + EP = 25</strong>.';
+  }
+
+  // Current price/quantity guides
+  ctxSurplus.strokeStyle='#111827';ctxSurplus.lineWidth=2;
+  ctxSurplus.beginPath();ctxSurplus.moveTo(sx(0),sy(P));ctxSurplus.lineTo(sx(Q),sy(P));ctxSurplus.stroke();
+  ctxSurplus.save();ctxSurplus.setLineDash([5,5]);ctxSurplus.lineWidth=1.5;
+  ctxSurplus.beginPath();ctxSurplus.moveTo(sx(Q),sy(P));ctxSurplus.lineTo(sx(Q),sy(0));ctxSurplus.stroke();
+  // Initial reference guides when comparing.
+  if(surplusMode!=='total' && P!==P0){
+    ctxSurplus.strokeStyle='#667085';
+    ctxSurplus.beginPath();ctxSurplus.moveTo(sx(0),sy(P0));ctxSurplus.lineTo(sx(Q0),sy(P0));ctxSurplus.stroke();
+    ctxSurplus.beginPath();ctxSurplus.moveTo(sx(Q0),sy(P0));ctxSurplus.lineTo(sx(Q0),sy(0));ctxSurplus.stroke();
+  }
+  ctxSurplus.restore();
+
+  ctxSurplus.beginPath();ctxSurplus.fillStyle='#111827';ctxSurplus.arc(sx(Q),sy(P),7,0,Math.PI*2);ctxSurplus.fill();
+
+  $('surplusPriceVal').textContent=(+surplusPrice.value).toFixed(0);
+  $('surplusQ').textContent=Q.toFixed(1).replace('.',',');
+  $('surplusP').textContent=P.toFixed(1).replace('.',',');
+  $('surplusCS').textContent=CS===null?'—':CS.toFixed(1).replace('.',',');
+  $('surplusPS').textContent=PS===null?'—':PS.toFixed(1).replace('.',',');
+  $('surplusTS').textContent=TS===null?'—':TS.toFixed(1).replace('.',',');
+}
+
+$('surplusConsumerBtn').onclick=()=>setSurplusMode('consumer');
+$('surplusProducerBtn').onclick=()=>setSurplusMode('producer');
+$('surplusTotalBtn').onclick=()=>setSurplusMode('total');
+$('surplusReset').onclick=()=>{surplusPrice.value=5;setSurplusMode('consumer');};
+surplusPrice.oninput=renderSurplus;
+renderSurplus();
+
+
+// --- MÓDULO: EXCEDENTE Y EFICIENCIA ---
+const cvEfficiency=$('cvEfficiency'),ctxEfficiency=cvEfficiency.getContext('2d');
+const effP=$('effP');
+
+function effPoly(points,fill){
+  ctxEfficiency.fillStyle=fill;
+  ctxEfficiency.beginPath();
+  points.forEach((p,i)=>i?ctxEfficiency.lineTo(p[0],p[1]):ctxEfficiency.moveTo(p[0],p[1]));
+  ctxEfficiency.closePath();ctxEfficiency.fill();
+}
+
+function renderEfficiency(){
+  const P=+effP.value;
+  const Qd=Math.max(0,10-P);
+  const Qs=Math.max(0,P);
+  // Sin racionamiento específico, usamos el lado corto del mercado:
+  // a P<Pe limita la oferta; a P>Pe limita la demanda.
+  const Q=Math.min(Qd,Qs);
+  const Qe=5,Pe=5,maxTS=25;
+
+  const CS=10*Q-.5*Q*Q-P*Q;
+  const PS=P*Q-.5*Q*Q;
+  const TS=CS+PS;
+  const loss=maxTS-TS;
+
+  const pad={l:72,r:28,t:30,b:64},xmax=11,ymax=11;
+  const sx=x=>pad.l+x/xmax*(cvEfficiency.width-pad.l-pad.r);
+  const sy=y=>cvEfficiency.height-pad.b-y/ymax*(cvEfficiency.height-pad.t-pad.b);
+
+  ctxEfficiency.clearRect(0,0,cvEfficiency.width,cvEfficiency.height);
+  ctxEfficiency.fillStyle='#fff';ctxEfficiency.fillRect(0,0,cvEfficiency.width,cvEfficiency.height);
+
+  ctxEfficiency.strokeStyle='#e5e7eb';ctxEfficiency.lineWidth=1;
+  ctxEfficiency.fillStyle='#667085';ctxEfficiency.font='13px system-ui';
+  for(let x=0;x<=10;x+=2){
+    ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(x),sy(0));ctxEfficiency.lineTo(sx(x),sy(10));ctxEfficiency.stroke();
+    ctxEfficiency.fillText(x,sx(x)-5,sy(0)+23);
+  }
+  for(let y=0;y<=10;y+=2){
+    ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(0),sy(y));ctxEfficiency.lineTo(sx(10),sy(y));ctxEfficiency.stroke();
+    if(y>0)ctxEfficiency.fillText(y,sx(0)-30,sy(y)+4);
+  }
+
+  ctxEfficiency.strokeStyle='#111827';ctxEfficiency.lineWidth=2;
+  ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(0),sy(0));ctxEfficiency.lineTo(sx(10.5),sy(0));ctxEfficiency.stroke();
+  ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(0),sy(0));ctxEfficiency.lineTo(sx(0),sy(10.5));ctxEfficiency.stroke();
+  ctxEfficiency.fillStyle='#14213d';ctxEfficiency.font='bold 15px system-ui';
+  ctxEfficiency.fillText('Cantidad Q',sx(5.5)-36,cvEfficiency.height-19);
+  ctxEfficiency.save();ctxEfficiency.translate(20,sy(5)+25);ctxEfficiency.rotate(-Math.PI/2);ctxEfficiency.fillText('Precio P',0,0);ctxEfficiency.restore();
+
+  // Excedentes realizados hasta la cantidad efectivamente transada.
+  effPoly([[sx(0),sy(10)],[sx(0),sy(P)],[sx(Q),sy(P)],[sx(Q),sy(10-Q)]],'rgba(147,197,253,.42)');
+  effPoly([[sx(0),sy(0)],[sx(0),sy(P)],[sx(Q),sy(P)],[sx(Q),sy(Q)]],'rgba(134,239,172,.42)');
+
+  // Pérdida de excedente: intercambios mutuamente beneficiosos entre Q y Q* que no ocurren.
+  if(Q<Qe){
+    effPoly([[sx(Q),sy(10-Q)],[sx(Q),sy(Q)],[sx(Qe),sy(Pe)]],'rgba(251,191,36,.52)');
+  }
+
+  // Demanda y oferta.
+  ctxEfficiency.strokeStyle='#2563eb';ctxEfficiency.lineWidth=4;
+  ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(0),sy(10));ctxEfficiency.lineTo(sx(10),sy(0));ctxEfficiency.stroke();
+  ctxEfficiency.strokeStyle='#dc2626';
+  ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(0),sy(0));ctxEfficiency.lineTo(sx(10),sy(10));ctxEfficiency.stroke();
+
+  // Equilibrio.
+  ctxEfficiency.save();ctxEfficiency.setLineDash([5,5]);ctxEfficiency.strokeStyle='#667085';ctxEfficiency.lineWidth=1.5;
+  ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(0),sy(Pe));ctxEfficiency.lineTo(sx(Qe),sy(Pe));ctxEfficiency.stroke();
+  ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(Qe),sy(Pe));ctxEfficiency.lineTo(sx(Qe),sy(0));ctxEfficiency.stroke();
+  ctxEfficiency.restore();
+  ctxEfficiency.beginPath();ctxEfficiency.fillStyle='#667085';ctxEfficiency.arc(sx(Qe),sy(Pe),6,0,Math.PI*2);ctxEfficiency.fill();
+  ctxEfficiency.fillStyle='#667085';ctxEfficiency.font='bold 13px system-ui';
+  ctxEfficiency.fillText('E*',sx(Qe)+9,sy(Pe)-9);
+
+  // Precio elegido, Qd y Qo.
+  ctxEfficiency.strokeStyle='#111827';ctxEfficiency.lineWidth=2.3;
+  ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(0),sy(P));ctxEfficiency.lineTo(sx(Math.max(Qd,Qs)),sy(P));ctxEfficiency.stroke();
+
+  ctxEfficiency.save();ctxEfficiency.setLineDash([5,5]);ctxEfficiency.lineWidth=1.5;
+  ctxEfficiency.strokeStyle='#2563eb';
+  ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(Qd),sy(P));ctxEfficiency.lineTo(sx(Qd),sy(0));ctxEfficiency.stroke();
+  ctxEfficiency.strokeStyle='#dc2626';
+  ctxEfficiency.beginPath();ctxEfficiency.moveTo(sx(Qs),sy(P));ctxEfficiency.lineTo(sx(Qs),sy(0));ctxEfficiency.stroke();
+  ctxEfficiency.restore();
+
+  // Mark transacted quantity.
+  ctxEfficiency.beginPath();ctxEfficiency.fillStyle='#111827';ctxEfficiency.arc(sx(Q),sy(P),7,0,Math.PI*2);ctxEfficiency.fill();
+
+  $('effPVal').textContent=P.toFixed(0);
+  $('effQd').textContent=Qd.toFixed(0);
+  $('effQs').textContent=Qs.toFixed(0);
+  $('effQt').textContent=Q.toFixed(0);
+  $('effCS').textContent=CS.toFixed(1).replace('.',',');
+  $('effPS').textContent=PS.toFixed(1).replace('.',',');
+  $('effTS').textContent=TS.toFixed(1).replace('.',',');
+  $('effLoss').textContent=loss.toFixed(1).replace('.',',');
+
+  if(P===Pe){
+    $('effNote').innerHTML='<strong>Equilibrio competitivo.</strong> Qd = Qo = 5, se realizan todas las transacciones mutuamente beneficiosas y el excedente total alcanza su máximo: <strong>ET = 25</strong>.';
+  }else if(P<Pe){
+    $('effNote').innerHTML='<strong>Precio bajo el equilibrio.</strong> Qd &gt; Qo, por lo que la oferta limita las transacciones. Se intercambian solo <strong>Q = '+Q.toFixed(0)+'</strong> unidades. El triángulo amarillo representa intercambios beneficiosos que no se realizan y, por tanto, una <strong>pérdida de excedente</strong>.';
+  }else{
+    $('effNote').innerHTML='<strong>Precio sobre el equilibrio.</strong> Qo &gt; Qd, por lo que la demanda limita las transacciones. Se intercambian solo <strong>Q = '+Q.toFixed(0)+'</strong> unidades. El triángulo amarillo representa intercambios beneficiosos que no se realizan y, por tanto, una <strong>pérdida de excedente</strong>.';
+  }
+}
+
+$('effReset').onclick=()=>{effP.value=5;renderEfficiency();};
+effP.oninput=renderEfficiency;
+renderEfficiency();
+
+
+// --- MÓDULO: IMPUESTOS E INCIDENCIA ---
+const cvTax=$('cvTax'),ctxTax=cvTax.getContext('2d');
+const taxT=$('taxT'),taxD=$('taxD'),taxS=$('taxS');
+const TAX_Q0=5,TAX_P0=5;
+const TAX_LABELS=['Perfectamente inelástica','Muy inelástica','Inelástica','Intermedia','Elástica','Muy elástica','Casi perfectamente elástica'];
+const TAX_SLOPES=[null,2.4,1.25,.75,.38,.16,.06];
+
+function taxPoly(pts,fill){
+  ctxTax.fillStyle=fill;ctxTax.beginPath();
+  pts.forEach((p,i)=>i?ctxTax.lineTo(p[0],p[1]):ctxTax.moveTo(p[0],p[1]));
+  ctxTax.closePath();ctxTax.fill();
+}
+function renderTax(){
+  const t=+taxT.value,di=+taxD.value,si=+taxS.value;
+  const dVertical=di===0, sVertical=si===0;
+  const b=dVertical?null:TAX_SLOPES[di];
+  const d=sVertical?null:TAX_SLOPES[si];
+
+  let a=dVertical?null:5+5*b;
+  let c=sVertical?null:5-5*d;
+  let Qt,Pc,Pp;
+
+  if(dVertical && sVertical){
+    // Both sides vertical at Q=5: quantity cannot adjust.
+    // Split the tax evenly only as a neutral display convention because
+    // incidence is not pinned down by slopes when both are perfectly inelastic.
+    Qt=5; Pc=5+t/2; Pp=5-t/2;
+  }else if(dVertical){
+    // Perfectly inelastic demand: consumers bear the full tax.
+    Qt=5; Pp=5; Pc=5+t;
+  }else if(sVertical){
+    // Perfectly inelastic supply: producers bear the full tax.
+    Qt=5; Pc=5; Pp=5-t;
+  }else{
+    Qt=Math.max(0,(a-c-t)/(b+d));
+    Pc=a-b*Qt;
+    Pp=c+d*Qt;
+  }
+
+  const cb=Pc-5,pb=5-Pp;
+  const cs=t?100*cb/t:0,ps=t?100*pb/t:0;
+  const rev=t*Qt,dwl=.5*t*Math.max(0,5-Qt);
+
+  const pad={l:72,r:28,t:30,b:64},xmax=11,ymax=11;
+  const sx=x=>pad.l+x/xmax*(cvTax.width-pad.l-pad.r);
+  const sy=y=>cvTax.height-pad.b-y/ymax*(cvTax.height-pad.t-pad.b);
+  ctxTax.clearRect(0,0,cvTax.width,cvTax.height);ctxTax.fillStyle='#fff';ctxTax.fillRect(0,0,cvTax.width,cvTax.height);
+  ctxTax.strokeStyle='#e5e7eb';ctxTax.lineWidth=1;ctxTax.fillStyle='#667085';ctxTax.font='13px system-ui';
+  for(let x=0;x<=10;x+=2){ctxTax.beginPath();ctxTax.moveTo(sx(x),sy(0));ctxTax.lineTo(sx(x),sy(10));ctxTax.stroke();ctxTax.fillText(x,sx(x)-5,sy(0)+23);}
+  for(let y=0;y<=10;y+=2){ctxTax.beginPath();ctxTax.moveTo(sx(0),sy(y));ctxTax.lineTo(sx(10),sy(y));ctxTax.stroke();if(y)ctxTax.fillText(y,sx(0)-30,sy(y)+4);}
+  ctxTax.strokeStyle='#111827';ctxTax.lineWidth=2;
+  ctxTax.beginPath();ctxTax.moveTo(sx(0),sy(0));ctxTax.lineTo(sx(10.5),sy(0));ctxTax.stroke();
+  ctxTax.beginPath();ctxTax.moveTo(sx(0),sy(0));ctxTax.lineTo(sx(0),sy(10.5));ctxTax.stroke();
+  ctxTax.fillStyle='#14213d';ctxTax.font='bold 15px system-ui';ctxTax.fillText('Cantidad Q',sx(5.5)-36,cvTax.height-19);
+  ctxTax.save();ctxTax.translate(20,sy(5)+25);ctxTax.rotate(-Math.PI/2);ctxTax.fillText('Precio P',0,0);ctxTax.restore();
+
+  if(t>0){
+    // Parte de la recaudación asociada a la incidencia sobre consumidores:
+    // rectángulo entre P* y Pc, con base Qt.
+    if(Pc>5){
+      taxPoly([[sx(0),sy(Pc)],[sx(Qt),sy(Pc)],[sx(Qt),sy(5)],[sx(0),sy(5)]],'rgba(124,58,237,.34)');
+    }
+
+    // Parte de la recaudación asociada a la incidencia sobre productores:
+    // rectángulo entre Pp y P*, con base Qt.
+    if(Pp<5){
+      taxPoly([[sx(0),sy(5)],[sx(Qt),sy(5)],[sx(Qt),sy(Pp)],[sx(0),sy(Pp)]],'rgba(20,184,166,.38)');
+    }
+
+    // Pérdida social.
+    taxPoly([[sx(Qt),sy(Pc)],[sx(Qt),sy(Pp)],[sx(5),sy(5)]],'rgba(251,191,36,.55)');
+  }
+  function curve(fn,color){
+    ctxTax.strokeStyle=color;ctxTax.lineWidth=4;ctxTax.beginPath();let started=false;
+    for(let q=0;q<=10;q+=.03){let p=fn(q);if(p>=0&&p<=10.5){if(!started){ctxTax.moveTo(sx(q),sy(p));started=true}else ctxTax.lineTo(sx(q),sy(p));}}
+    ctxTax.stroke();
+  }
+  if(dVertical){
+    ctxTax.strokeStyle='#2563eb';ctxTax.lineWidth=4;
+    ctxTax.beginPath();ctxTax.moveTo(sx(5),sy(0));ctxTax.lineTo(sx(5),sy(10.5));ctxTax.stroke();
+  }else{
+    curve(q=>a-b*q,'#2563eb');
+  }
+  if(sVertical){
+    ctxTax.strokeStyle='#dc2626';ctxTax.lineWidth=4;
+    ctxTax.beginPath();ctxTax.moveTo(sx(5),sy(0));ctxTax.lineTo(sx(5),sy(10.5));ctxTax.stroke();
+  }else{
+    curve(q=>c+d*q,'#dc2626');
+  }
+
+  ctxTax.save();ctxTax.setLineDash([5,5]);ctxTax.strokeStyle='#667085';ctxTax.lineWidth=1.4;
+  ctxTax.beginPath();ctxTax.moveTo(sx(0),sy(5));ctxTax.lineTo(sx(5),sy(5));ctxTax.stroke();
+  ctxTax.beginPath();ctxTax.moveTo(sx(5),sy(5));ctxTax.lineTo(sx(5),sy(0));ctxTax.stroke();ctxTax.restore();
+
+  if(t>0){
+    ctxTax.strokeStyle='#111827';ctxTax.lineWidth=2;
+    ctxTax.beginPath();ctxTax.moveTo(sx(0),sy(Pc));ctxTax.lineTo(sx(Qt),sy(Pc));ctxTax.stroke();
+    ctxTax.beginPath();ctxTax.moveTo(sx(0),sy(Pp));ctxTax.lineTo(sx(Qt),sy(Pp));ctxTax.stroke();
+    ctxTax.save();ctxTax.setLineDash([5,5]);ctxTax.beginPath();ctxTax.moveTo(sx(Qt),sy(Pp));ctxTax.lineTo(sx(Qt),sy(0));ctxTax.stroke();ctxTax.restore();
+    let bx=sx(Qt)+14;ctxTax.lineWidth=2.5;ctxTax.beginPath();ctxTax.moveTo(bx,sy(Pc));ctxTax.lineTo(bx,sy(Pp));ctxTax.stroke();
+    ctxTax.beginPath();ctxTax.moveTo(bx-5,sy(Pc));ctxTax.lineTo(bx+5,sy(Pc));ctxTax.moveTo(bx-5,sy(Pp));ctxTax.lineTo(bx+5,sy(Pp));ctxTax.stroke();
+    ctxTax.fillStyle='#111827';ctxTax.font='bold 13px system-ui';ctxTax.fillText('t',bx+8,(sy(Pc)+sy(Pp))/2+4);
+  }
+  ctxTax.beginPath();ctxTax.fillStyle='#667085';ctxTax.arc(sx(5),sy(5),6,0,Math.PI*2);ctxTax.fill();
+
+  $('taxTVal').textContent=t.toFixed(1).replace('.',',');$('taxDVal').textContent=TAX_LABELS[di];$('taxSVal').textContent=TAX_LABELS[si];
+  $('taxP0').textContent='5,0';$('taxPc').textContent=Pc.toFixed(1).replace('.',',');$('taxPp').textContent=Pp.toFixed(1).replace('.',',');
+  $('taxQ0').textContent='5,0';$('taxQt').textContent=Qt.toFixed(1).replace('.',',');
+  $('taxConsumerShare').textContent=t?cs.toFixed(0)+'%':'—';$('taxProducerShare').textContent=t?ps.toFixed(0)+'%':'—';
+  $('taxRevenue').textContent=rev.toFixed(1).replace('.',',');$('taxDWL').textContent=dwl.toFixed(1).replace('.',',');
+
+  let msg;
+  if(t===0){
+    msg='<strong>Sin impuesto.</strong> P*=5 y Q*=5.';
+  }else if(dVertical && !sVertical){
+    msg='<strong>Demanda perfectamente inelástica.</strong> La cantidad no cambia y los consumidores soportan el <strong>100% del impuesto</strong>.';
+  }else if(sVertical && !dVertical){
+    msg='<strong>Oferta perfectamente inelástica.</strong> La cantidad no cambia y los productores soportan el <strong>100% del impuesto</strong>.';
+  }else if(dVertical && sVertical){
+    msg='<strong>Ambos lados son perfectamente inelásticos.</strong> La cantidad queda fija. En esta visualización la carga se divide 50/50 como convención gráfica; con ambas curvas verticales, las elasticidades por sí solas no determinan el reparto.';
+  }else if(Math.abs(cs-ps)<3){
+    msg='<strong>Incidencia similar.</strong> Consumidores y productores soportan aproximadamente la misma proporción del impuesto.';
+  }else if(cs>ps){
+    msg='<strong>Mayor incidencia en consumidores.</strong> La demanda es relativamente menos elástica que la oferta.';
+  }else{
+    msg='<strong>Mayor incidencia en productores.</strong> La oferta es relativamente menos elástica que la demanda.';
+  }
+  $('taxNote').innerHTML=msg+(t? ' La brecha <strong>Pc − Pp = t</strong>. La <strong>recaudación total</strong> sigue siendo t × Qt: el área morada muestra la parte asociada a la carga soportada por consumidores y el área verde-azulada la parte asociada a la carga soportada por productores. El triángulo amarillo muestra la <strong>pérdida social</strong>. La regla clave es: <strong>el lado menos elástico soporta una mayor parte del impuesto</strong>.':'');
+}
+$('taxReset').onclick=()=>{taxT.value=2;taxD.value=3;taxS.value=3;renderTax();};
+[taxT,taxD,taxS].forEach(x=>x.oninput=renderTax);
+renderTax();
+
+
 // --- NAVEGACIÓN: EMPRESA ---
 function showCompanyModule(which){
   [1,2,3,4,5,6].forEach(i=>{
@@ -2171,6 +2698,9 @@ function showCompanyModule(which){
   $('modMarket').classList.toggle('active',which==='market');
   $('modComparative').classList.toggle('active',which==='comparative');
   $('modInelastic').classList.toggle('active',which==='inelastic');
+  $('modSurplus').classList.toggle('active',which==='surplus');
+  $('modEfficiency').classList.toggle('active',which==='efficiency');
+  $('modTax').classList.toggle('active',which==='tax');
 
   $('tabProd').classList.toggle('active',which==='prod');
   $('tabCost').classList.toggle('active',which==='cost');
@@ -2179,6 +2709,9 @@ function showCompanyModule(which){
   $('tabMarket').classList.toggle('active',which==='market');
   $('tabComparative').classList.toggle('active',which==='comparative');
   $('tabInelastic').classList.toggle('active',which==='inelastic');
+  $('tabSurplus').classList.toggle('active',which==='surplus');
+  $('tabEfficiency').classList.toggle('active',which==='efficiency');
+  $('tabTax').classList.toggle('active',which==='tax');
 
   if(which==='prod') render();
   if(which==='cost') renderCost();
@@ -2187,6 +2720,9 @@ function showCompanyModule(which){
   if(which==='market') renderMarket();
   if(which==='comparative') renderComparative();
   if(which==='inelastic') renderInelastic();
+  if(which==='surplus') renderSurplus();
+  if(which==='efficiency') renderEfficiency();
+  if(which==='tax') renderTax();
 }
 $('tabProd').onclick=()=>showCompanyModule('prod');
 $('tabCost').onclick=()=>showCompanyModule('cost');
@@ -2195,6 +2731,9 @@ $('tabSupply').onclick=()=>showCompanyModule('supply');
 $('tabMarket').onclick=()=>showCompanyModule('market');
 $('tabComparative').onclick=()=>showCompanyModule('comparative');
 $('tabInelastic').onclick=()=>showCompanyModule('inelastic');
+$('tabSurplus').onclick=()=>showCompanyModule('surplus');
+$('tabEfficiency').onclick=()=>showCompanyModule('efficiency');
+$('tabTax').onclick=()=>showCompanyModule('tax');
 
 </script>
 </body>
